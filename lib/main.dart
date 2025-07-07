@@ -1,7 +1,12 @@
 import 'package:anticipatorygpt/home/home.dart';
+import 'package:anticipatorygpt/model_download/download_model_bloc.dart';
+import 'package:anticipatorygpt/model_download/downloadscreen.dart';
 import 'package:anticipatorygpt/routers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'model_download/model_repository.dart';
 import 'notFound.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -12,18 +17,30 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Anticipatory gpt',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return RepositoryProvider(
+      create: (context) => ModelRepository(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<DownloadModelBloc>(
+            create: (context) => DownloadModelBloc(
+              RepositoryProvider.of<ModelRepository>(context),
+            )..add(CheckModelExists()),
+          ),
+        ],
+        child: MaterialApp(
+          title: 'Anticipatory gpt',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            primarySwatch: Colors.indigo,
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            cardColor: const Color(0xFF1E1E1E),
+          ),
+          initialRoute: AppRoutes.download,
+          onGenerateRoute: AppRouter.generateRoute,
+        ),
       ),
-      initialRoute:AppRoutes.home,
-      onGenerateRoute: AppRouter.generateRoute,
-      home: Home(),
     );
   }
 }
-
-
-

@@ -31,10 +31,12 @@ class DownloadModelBloc extends Bloc<DownloadModelEvent, DownloadModelState> {
 
       if (fileExists) {
         emit(ModelAlreadyExists(filePath));
+        print("file exists $filePath");
       } else {
         add(StartDownload());
       }
     } catch (e) {
+      print("Download failure");
       emit(DownloadFailure(e.toString()));
     }
   }
@@ -51,6 +53,7 @@ class DownloadModelBloc extends Bloc<DownloadModelEvent, DownloadModelState> {
       });
       emit(DownloadSuccess(filePath));
     } catch (e) {
+      print("Exception occured on download $e");
       emit(DownloadFailure(e.toString()));
     }
   }
