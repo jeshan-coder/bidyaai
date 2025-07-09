@@ -1,17 +1,21 @@
 import 'package:anticipatorygpt/model_download/model_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_mediapipe_chat/flutter_mediapipe_chat.dart';
+import 'package:flutter_gemma/core/chat.dart';
+import 'package:flutter_gemma/core/model.dart';
+// import 'package:flutter_gemma/mobile/flutter_gemma_mobile.dart';
 import 'package:meta/meta.dart';
-
+import 'package:flutter_gemma/flutter_gemma.dart';
 part 'chat_event.dart';
 part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ModelRepository _modelRepository;
-  final FlutterMediapipeChat _chatPlugin =FlutterMediapipeChat();
+  final FlutterGemmaPlugin _gemmaPlugin =FlutterGemmaPlugin.instance;
 
-  bool _isModelLoaded=false;
+  InferenceModel? _inferenceModel;
+  InferenceChat? _chat;
+  // bool _isModelLoaded=false;
 
   ChatBloc(this._modelRepository) : super(ChatInitial()) {
     // on<ChatEvent>((event, emit) {
@@ -26,13 +30,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try{
       final modelPath= await _modelRepository.getModelFilePath();
 
-      final config=ModelConfig(path: modelPath,
-      temperature: 0.8,
-      maxTokens: 2048,
-      topK: 40);
+      await _gemmaPlugin.modelManager.setModelPath(modelPath);
 
-      await _chatPlugin.loadModel(config);
-      _isModelLoaded=true;
+      _inferenceModel= await _gemmaPlugin.createModel(modelType:ModelType.gemmaIt);
+
+      _chat=await _inferenceModel!.createChat();
     }
     catch(e)
     {
@@ -42,7 +44,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async
   {
-    if (!_isModelLoaded)
+    if (_chat==null)
       {
         emit(ChatError(error: 'AI Model is not initialized', messages: state.messages));
         return;
@@ -61,11 +63,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(ChatLoading(messages: messagesWithPlaceholder));
 
     try{
-      final responseStream= _chatPlugin.generateResponseAsync(event.message);
+      await _chat!.addQueryChunk(Message.text(text: event.message,isUser: true));
+
+      final responseStream= _chat!.generateChatResponseAsync();
+
       String fullResponse='';
       await for(final responsePart in responseStream)
         {
-          fullResponse+=responsePart??'';
+          fullResponse+=responsePart;
           final currentMessages=List<ChatMessage>.from(updatedMessages);
           currentMessages.add(ChatMessage(text: fullResponse, isFromUser: false));
           emit(ChatLoading(messages: currentMessages));
@@ -83,6 +88,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   @override
   Future<void> close() {
     // _chatPlugin.dispose();
+    _inferenceModel?.close();
     return super.close();
   }
 }
