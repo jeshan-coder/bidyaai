@@ -6,11 +6,14 @@ import 'package:path_provider/path_provider.dart';
 
 class ModelRepository {
   final Dio _dio = Dio();
-  static const String _modelFileName = 'gemma-3n-E4B-it-int4.task';
+  // --- PREVIOUS 4B MODEL (COMMENTED OUT FOR REFERENCE) ---
+  // static const String _modelFileName = 'gemma-3n-E4B-it-int4.task';
+  // static const String _modelUrl = 'https://huggingface.co/google/gemma-3n-E4B-it-litert-preview/resolve/main/gemma-3n-E4B-it-int4.task';
+
+  static const String _modelFileName = 'gemma-3n-E2B-it-int4.task';
 
   // This is the correct, direct download link for the specified .task file.
-  static const String _modelUrl = 'https://huggingface.co/google/gemma-3n-E4B-it-litert-preview/resolve/main/gemma-3n-E4B-it-int4.task';
-
+  static const String _modelUrl = 'https://huggingface.co/google/gemma-3n-E2B-it-litert-preview/resolve/main/gemma-3n-E2B-it-int4.task';
   // --- NEW: HUGGING FACE AUTHENTICATION ---
   // To download this model, you need a Hugging Face User Access Token.
   // 1. Go to https://huggingface.co/settings/tokens

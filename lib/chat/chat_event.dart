@@ -5,18 +5,19 @@ sealed class ChatEvent extends Equatable{
   const ChatEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 
-class InitializeGemma extends ChatEvent{}
+class InitializeChat extends ChatEvent{}
 
 class SendMessage extends ChatEvent{
   final String message;
-  const SendMessage(this.message);
+  final Uint8List? imageBytes;
+  const SendMessage(this.message,{this.imageBytes});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message,imageBytes];
 }
 
 
