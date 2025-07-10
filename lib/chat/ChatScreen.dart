@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,16 +14,12 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
-
   final ScrollController _scrollController = ScrollController();
-
-  final ImagePicker _picker=ImagePicker();
-
+  final ImagePicker _picker = ImagePicker();
   Uint8List? _selectedImageBytes;
 
   @override
   void initState() {
-    // Dispatch the event to start initializing the model when the screen loads.
     super.initState();
     context.read<ChatBloc>().add(InitializeChat());
   }
@@ -36,25 +31,27 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async
-  {
-    final XFile? image= await _picker.pickImage(source: ImageSource.gallery);
-    if(image!=null)
-      {
-        final bytes= await image.readAsBytes();
-        setState(() {
-          _selectedImageBytes=bytes;
-        });
-      }
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      setState(() {
+        _selectedImageBytes = bytes;
+      });
+    }
   }
 
-
   void _sendMessage() {
-    if (_textController.text.trim().isNotEmpty || _selectedImageBytes!=null) {
-      context.read<ChatBloc>().add(SendMessage(_textController.text.trim(),imageBytes: _selectedImageBytes));
+    if (_textController.text.trim().isNotEmpty || _selectedImageBytes != null) {
+      context.read<ChatBloc>().add(
+        SendMessage(
+          _textController.text.trim(),
+          imageBytes: _selectedImageBytes,
+        ),
+      );
       _textController.clear();
       setState(() {
-        _selectedImageBytes=null;
+        _selectedImageBytes = null;
       });
       FocusScope.of(context).unfocus();
     }
@@ -75,7 +72,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Chat")),
+      resizeToAvoidBottomInset: true, // allows body to shift for keyboard
+      appBar: AppBar(title: const Text("Chat")),
       body: Column(
         children: [
           Expanded(
@@ -112,7 +110,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ElevatedButton(
                           onPressed: () =>
                               context.read<ChatBloc>().add(InitializeChat()),
-                          child: const Text('retry'),
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
@@ -122,30 +120,29 @@ class _ChatScreenState extends State<ChatScreen> {
                 return Column(
                   children: [
                     Expanded(
-                      child: (state.messages.isEmpty)
+                      child: state.messages.isEmpty
                           ? const Center(child: Text('Ask me anything'))
                           : ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.all(8.0),
-                              itemCount: state.messages.length,
-                              itemBuilder: (context, index) {
-                                final message = state.messages[index];
-                                return _ChatMessageBubble(message: message);
-                              },
-                            ),
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(8.0),
+                        itemCount: state.messages.length,
+                        itemBuilder: (context, index) {
+                          final message = state.messages[index];
+                          return _ChatMessageBubble(message: message);
+                        },
+                      ),
                     ),
                     _MessageInputField(
                       controller: _textController,
                       onSend: _sendMessage,
                       onAttach: _pickImage,
-                      isGenerating: state is ChatLoading,
-                      attachedImageBytes: _selectedImageBytes,
-                      onClearImage: ()
-                      {
+                      onClearImage: () {
                         setState(() {
-                          _selectedImageBytes=null;
+                          _selectedImageBytes = null;
                         });
                       },
+                      isGenerating: state is ChatLoading,
+                      attachedImageBytes: _selectedImageBytes,
                     ),
                   ],
                 );
@@ -165,10 +162,6 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          // _MessageInputField(
-          //   controller:_textController,
-          //   onSend:_sendMessage,
-          // )
         ],
       ),
     );
@@ -198,24 +191,32 @@ class _ChatMessageBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if(message.imageBytes!=null)
+            if (message.imageBytes != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: Image.memory(
                   message.imageBytes!,
-                  height: 150, width:double.infinity,
+                  height: 150,
+                  width: double.infinity,
                   fit: BoxFit.cover,
                 ),
               ),
-            if(message.text.isNotEmpty)
-              Padding(padding:EdgeInsets.only(top: message.imageBytes!=null?8.0:0),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  color: isUser?theme.colorScheme.onPrimary:theme.colorScheme.onSurface
+            if (message.text.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(
+                    top: message.imageBytes != null ? 8.0 : 0),
+                child: Text(
+                  message.text,
+                  style: TextStyle(
+                    color: isUser
+                        ? theme.colorScheme.onPrimary
+                        : theme.colorScheme.onSurface,
+                  ),
                 ),
-              ),),
-            if (!isUser && message.text.isEmpty && message.imageBytes==null)
+              ),
+            if (!isUser &&
+                message.text.isEmpty &&
+                message.imageBytes == null)
               SizedBox(
                 width: 20,
                 height: 20,
@@ -223,16 +224,7 @@ class _ChatMessageBubble extends StatelessWidget {
                   strokeWidth: 2,
                   color: theme.colorScheme.onSurface,
                 ),
-              )
-            // else
-            //   Text(
-            //     message.text,
-            //     style: TextStyle(
-            //       color: isUser
-            //           ? theme.colorScheme.onPrimary
-            //           : theme.colorScheme.onSurface,
-            //     ),
-            //   ),
+              ),
           ],
         ),
       ),
@@ -254,67 +246,84 @@ class _MessageInputField extends StatelessWidget {
     required this.onAttach,
     required this.onClearImage,
     required this.isGenerating,
-    this.attachedImageBytes
+    this.attachedImageBytes,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final canAttach = !isGenerating && attachedImageBytes == null;
 
-    final bool canAttach= !isGenerating && attachedImageBytes==null;
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, -1),
-            blurRadius: 4,
-            color: Colors.black.withOpacity(0.1),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(8, 8, 8, bottomInset),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            if(attachedImageBytes!=null)
-              _ImagePreview(imageBytes:attachedImageBytes!, onClear:onClearImage),
-
-            Row(
-              children: [
-                IconButton(onPressed:canAttach?onAttach:null , icon:const Icon(Icons.add_photo_alternate_outlined),color: canAttach?Theme.of(context).colorScheme.primary:Colors.grey,)
-              ],
-            ),
-            Expanded(
-              child: TextField(
-                controller: controller,
-                enabled: !isGenerating,
-                decoration: InputDecoration(
-                  hintText: isGenerating
-                      ? 'AI is responding...'
-                      : 'Type a message...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24.0),
-                    borderSide: BorderSide.none,
+            if (attachedImageBytes != null)
+              _ImagePreview(
+                imageBytes: attachedImageBytes!,
+                onClear: onClearImage,
+              ),
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                boxShadow: [
+                  BoxShadow(
+                    offset: const Offset(0, -1),
+                    blurRadius: 4,
+                    color: Colors.black.withOpacity(0.1),
                   ),
-                  filled: true,
-                  fillColor: Theme.of(context).scaffoldBackgroundColor,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-                ),
-                onSubmitted: (_) => isGenerating ? null : (_) => onSend(),
+                ],
               ),
-            ),
-            const SizedBox(width: 8.0),
-            IconButton(
-              onPressed: isGenerating ? null : onSend,
-              icon: Icon(
-                isGenerating ? Icons.stop_circle_outlined : Icons.send,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: isGenerating
-                    ? Colors.grey
-                    : Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: canAttach ? onAttach : null,
+                    icon: const Icon(
+                        Icons.add_photo_alternate_outlined),
+                    color: canAttach
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      enabled: !isGenerating,
+                      decoration: InputDecoration(
+                        hintText: isGenerating
+                            ? 'AI is responding…'
+                            : 'Type a message…',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24.0),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor:
+                        Theme.of(context).scaffoldBackgroundColor,
+                        contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16.0),
+                      ),
+                      onSubmitted: (_) =>
+                      isGenerating ? null : (_) => onSend(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: isGenerating ? null : onSend,
+                    icon: Icon(isGenerating
+                        ? Icons.stop_circle_outlined
+                        : Icons.send),
+                    style: IconButton.styleFrom(
+                      backgroundColor: isGenerating
+                          ? Colors.grey
+                          : Theme.of(context).colorScheme.primary,
+                      foregroundColor:
+                      Theme.of(context).colorScheme.onPrimary,
+                      padding: const EdgeInsets.all(12),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -327,31 +336,45 @@ class _MessageInputField extends StatelessWidget {
 class _ImagePreview extends StatelessWidget {
   final Uint8List imageBytes;
   final VoidCallback onClear;
-  const _ImagePreview({required this.imageBytes,required this.onClear});
+  const _ImagePreview({
+    required this.imageBytes,
+    required this.onClear,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(padding: EdgeInsets.only(bottom: 8.0,left: 40,right: 40),
-    child: Stack(
-      alignment: Alignment.topRight,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
-          child: Image.memory(imageBytes,height: 100,width: 100,fit: BoxFit.cover,),
-        ),
-        GestureDetector(
-          onTap: onClear,
-          child: Container(
-            margin: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: Colors.black54,
-              shape: BoxShape.circle
+    return Padding(
+      padding:
+      const EdgeInsets.only(bottom: 8.0, left: 40, right: 40),
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: Image.memory(
+              imageBytes,
+              height: 100,
+              width: 100,
+              fit: BoxFit.cover,
             ),
-            child: const Icon(Icons.close,color: Colors.white,size:18,),
           ),
-        )
-      ],
-    ),);
+          GestureDetector(
+            onTap: onClear,
+            child: Container(
+              margin: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
-
