@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:anticipatorygpt/routers.dart'; // Import AppRoutes
-import 'package:anticipatorygpt/quiz/quiz_model.dart'; // Import Quiz model
-
 import 'chat_bloc.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -135,37 +132,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         },
                       ),
                     ),
-                    // Display the "Start Quiz" button if a quiz is ready
-                    if (state.quizReady && state.generatedQuiz != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            // Navigate to QuizScreen, passing the quiz and chat instance
-                            Navigator.of(context).pushNamed(
-                              AppRoutes.quiz,
-                              arguments: {
-                                'quiz': state.generatedQuiz,
-                                'chatInstance': context.read<ChatBloc>().chatInstance,
-                              },
-                            ).then((_) {
-                              // Optional: Clear quiz state in ChatBloc after returning from quiz screen
-                              // This can be done by emitting a new ChatLoaded state without quiz data
-                              context.read<ChatBloc>().add(InitializeChat()); // Re-initialize or just clear state
-                            });
-                          },
-                          icon: const Icon(Icons.quiz),
-                          label: const Text('Start Quiz!'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(50), // Make button full width
-                            backgroundColor: Theme.of(context).colorScheme.secondary,
-                            foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
-                        ),
-                      ),
                     _MessageInputField(
                       controller: _textController,
                       onSend: _sendMessage,
@@ -182,7 +148,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 );
               },
               listener: (context, state) {
-                if (state is ChatLoading || state is ChatLoaded || state is ChatQuizReady) {
+                if (state is ChatLoading || state is ChatLoaded) {
                   _scrollToBottom();
                 }
                 if (state is ChatError) {
@@ -248,7 +214,6 @@ class _ChatMessageBubble extends StatelessWidget {
                   ),
                 ),
               ),
-            // Show loading indicator only if text is empty and not from user
             if (!isUser &&
                 message.text.isEmpty &&
                 message.imageBytes == null)
@@ -340,7 +305,7 @@ class _MessageInputField extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 16.0),
                       ),
                       onSubmitted: (_) =>
-                      isGenerating ? null : onSend(), // Changed to call onSend directly
+                      isGenerating ? null : (_) => onSend(),
                     ),
                   ),
                   const SizedBox(width: 8),

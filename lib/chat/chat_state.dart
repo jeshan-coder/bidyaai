@@ -21,10 +21,14 @@ class ChatMessage extends Equatable
 sealed class ChatState extends Equatable{
   final List<ChatMessage> messages;
 
-  const ChatState({this.messages=const []});
+  // for quiz
+  final bool quizReady;
+  final Quiz? generatedQuiz;
+
+  const ChatState({this.messages=const [],this.quizReady=false,this.generatedQuiz});
 
   @override
-  List<Object> get props => [messages];
+  List<Object?> get props => [messages,quizReady,generatedQuiz];
 }
 
 // state while the ai model is ready but no message have been sent yet
@@ -40,23 +44,36 @@ class ChatModelLoading extends ChatState{}
 // state when the model is processing a message
 class ChatLoading extends ChatState
 {
-  const ChatLoading({required super.messages});
+  const ChatLoading({required super.messages,super.quizReady,super.generatedQuiz});
 }
 
 class ChatLoaded extends ChatState
 {
-  const ChatLoaded({required super.messages});
+  const ChatLoaded({required super.messages,super.quizReady,super.generatedQuiz});
 }
+
+// for quiz
+// successfully generated and is ready
+class ChatQuizReady extends ChatState
+{
+  const ChatQuizReady({required super.messages,required super.generatedQuiz}):super(quizReady: true);
+
+  @override
+  List<Object?> get props => [messages,generatedQuiz];
+}
+
+
+
 
 class ChatError extends ChatState
 {
   final String error;
 
-  const ChatError({required this.error,required super.messages});
+  const ChatError({required this.error,required super.messages,super.quizReady,super.generatedQuiz});
 
 
   @override
   // TODO: implement props
-  List<Object> get props => [error,messages];
+  List<Object?> get props => [error,messages,quizReady,generatedQuiz];
 }
 

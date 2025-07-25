@@ -1,4 +1,6 @@
 import 'package:anticipatorygpt/model_download/downloadscreen.dart';
+import 'package:anticipatorygpt/quiz/quiz_model.dart';
+import 'package:anticipatorygpt/quiz/quiz_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'chat/ChatScreen.dart';
@@ -11,6 +13,7 @@ class AppRoutes {
   static const String home = '/';
   static const String download = "/download";
   static const String chat = "/chat";
+  static const String quiz="/quiz";
 }
 
 class AppRouter {
@@ -30,6 +33,24 @@ class AppRouter {
                 RepositoryProvider.of<ModelRepository>(context),
               ),
               child: ChatScreen(),
+            ));
+
+      case AppRoutes.quiz:
+      // Extract arguments for QuizScreen
+        final args = settings.arguments as Map<String, dynamic>;
+        final Quiz quiz = args['quiz'] as Quiz;
+        final chatInstance = args['chatInstance']; // InferenceChat instance
+
+        if (chatInstance == null) {
+          // Handle error if chatInstance is not passed or is null
+          return MaterialPageRoute(builder: (_) =>
+          const Center(child: Text('Error: Chat instance not available for quiz.')));
+        }
+
+        return MaterialPageRoute(builder: (_) =>
+            QuizScreen(
+              quiz: quiz,
+              chatInstance: chatInstance,
             ));
 
       default:
