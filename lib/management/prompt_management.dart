@@ -11,26 +11,36 @@ class PromptManager
 
   static String generateQuizRequestPrompt(String topic) {
     return '''
-      generate a 3-question multiple-choice quiz about "$topic".
-    Each question should have 4 options (A, B, C, D) and indicate the correct answer.
-    Provide the output in a JSON array format.
-    
-    Example JSON structure:
-    [
-      {
-        "question": "What is the capital of France?",
-        "options": ["Berlin", "Madrid", "Paris", "Rome"],
-        "correctAnswerIndex": 2,
-        "correctAnswer": "Paris"
-      },
-      {
-        "question": "Which planet is known as the Red Planet?",
-        "options": ["Earth", "Mars", "Jupiter", "Venus"],
-        "correctAnswerIndex": 1,
-        "correctAnswer": "Mars"
-      }
-    ]
-    Please ensure the JSON is valid and only contains the quiz data.
+      Generate a 3-question multiple-choice quiz about "$topic".
+      Each question should have 4 options (A, B, C, D) and indicate the correct answer.
+      
+      Your response **must** contain only the JSON array.
+      Do **NOT** include any markdown code block delimiters (like ```json or ```).
+      Do **NOT** include any conversational text, greetings, explanations, or pre/post-amble.
+      Start your response directly with `[` and end directly with `]`.
+      Ensure the JSON is perfectly valid.
+      
+      Example JSON structure:
+      [
+        {
+          "question": "What is the capital of France?",
+          "options": [{"text": "Berlin"}, {"text": "Madrid"}, {"text": "Paris"}, {"text": "Rome"}],
+          "correctAnswerIndex": 2,
+          "correctAnswer": "Paris"
+        },
+        {
+          "question": "Which planet is known as the Red Planet?",
+          "options": [{"text": "Earth"}, {"text": "Mars"}, {"text": "Jupiter"}, {"text": "Venus"}],
+          "correctAnswerIndex": 1,
+          "correctAnswer": "Mars"
+        },
+        {
+          "question": "What is the chemical symbol for water?",
+          "options": [{"text": "O2"}, {"text": "H2O"}, {"text": "CO2"}, {"text": "N2"}],
+          "correctAnswerIndex": 1,
+          "correctAnswer": "H2O"
+        }
+      ]
       ''';
   }
 

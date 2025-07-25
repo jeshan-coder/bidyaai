@@ -20,4 +20,9 @@ class SendMessage extends ChatEvent{
   List<Object?> get props => [message,imageBytes];
 }
 
+class ClearQuizState extends ChatEvent
+{
+
+}
+
 

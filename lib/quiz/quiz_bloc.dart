@@ -9,9 +9,9 @@ import 'package:flutter_gemma/flutter_gemma.dart';
 
 class QuizBloc extends Bloc<QuizEvent,QuizState>
 {
-  final InferenceChat _chat;
+  final InferenceModel _inferenceModel;
   
-  QuizBloc({required InferenceChat chat}):_chat=chat,super(QuizInitial())
+  QuizBloc({required InferenceModel inferenceModel}):_inferenceModel=inferenceModel,super(QuizInitial())
   {
     on<InitializeQuiz>(_onInitializeQuiz);
     on<SubmitAnswer>(_onSubmitAnswer);
@@ -38,7 +38,7 @@ class QuizBloc extends Bloc<QuizEvent,QuizState>
         print("updated user answer: $updatedUserAnswers");
         print("selected option index: ${event.selectedOptionIndex}");
         
-        emit(QuizDisplay(quiz: currentState.quiz,userAnswers: updatedUserAnswers));
+        emit(QuizDisplay(quiz: currentState.quiz,userAnswers: updatedUserAnswers,explanations: currentState.explanations));
       }
   }
 
@@ -64,29 +64,38 @@ class QuizBloc extends Bloc<QuizEvent,QuizState>
         explanations: currentExplanations, 
         questionIndexLoading: event.questionIndex));
     
-    
+    InferenceChat? explanationChat;
+
     try{
-      final explanationPrompt= PromptManager.generateExplanationPrompt(event.questionText, 
-          event.options, 
-          event.selectedOptionIndex);
-      
-      await _chat.addQueryChunk(Message.text(text: explanationPrompt,isUser: true));
+      explanationChat = await _inferenceModel.createChat(
+        supportImage: false, // Explanations are text-only
+        temperature: ModelSettings.defaultTemperature,
+        topK: ModelSettings.defaultTopK,
+        topP: ModelSettings.defaultTopP,
+      );
 
-      String fullExplanation='';
+      final explanationPrompt = PromptManager.generateExplanationPrompt(
+        event.questionText,
+        event.options,
+        event.selectedOptionIndex,
+      );
 
-      final responseStream= _chat.generateChatResponseAsync();
+      await explanationChat.addQueryChunk(Message.text(text: explanationPrompt, isUser: true));
 
-      await for(final responsePart in responseStream)
-        {
-          fullExplanation+=responsePart;
+      String fullExplanation = '';
+      final responseStream = explanationChat.generateChatResponseAsync();
 
-        }
+      await for (final responsePart in responseStream) {
+        fullExplanation += responsePart;
+      }
 
-      currentExplanations[event.questionIndex]=fullExplanation;
+      currentExplanations[event.questionIndex] = fullExplanation;
 
-      emit(QuizDisplay(quiz: currentQuiz,
-      userAnswers: currentUserAnswers,
-      explanations: currentExplanations));
+      emit(QuizDisplay(
+        quiz: currentQuiz,
+        userAnswers: currentUserAnswers,
+        explanations: currentExplanations,
+      ));
     }
     catch(e)
     {
@@ -102,6 +111,9 @@ class QuizBloc extends Bloc<QuizEvent,QuizState>
         userAnswers: currentUserAnswers,
         explanations: currentExplanations,
       ));
+    }
+    finally{
+
     }
   
   

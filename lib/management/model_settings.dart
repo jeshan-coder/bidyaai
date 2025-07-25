@@ -3,7 +3,7 @@ import 'package:flutter_gemma/core/chat.dart';
 
 class ModelSettings
 {
-  static const double defaultTemperature=0.5;
+  static const double defaultTemperature=0.1;
 
   static const int defaultTopK=40;
 
@@ -11,5 +11,5 @@ class ModelSettings
 
   static const int defaultMaxOutputTokens= 2048;
 
-  
+
 }

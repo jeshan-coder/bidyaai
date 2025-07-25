@@ -141,17 +141,16 @@ class _ChatScreenState extends State<ChatScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            // Navigate to QuizScreen, passing the quiz and chat instance
+                            // Navigate to QuizScreen, passing the quiz and the InferenceModel instance
                             Navigator.of(context).pushNamed(
                               AppRoutes.quiz,
                               arguments: {
                                 'quiz': state.generatedQuiz,
-                                'chatInstance': context.read<ChatBloc>().chatInstance,
+                                'inferenceModel': context.read<ChatBloc>().inferenceModel, // Pass InferenceModel
                               },
                             ).then((_) {
-                              // Optional: Clear quiz state in ChatBloc after returning from quiz screen
-                              // This can be done by emitting a new ChatLoaded state without quiz data
-                              context.read<ChatBloc>().add(InitializeChat()); // Re-initialize or just clear state
+                              // Clear quiz state in ChatBloc after returning from quiz screen
+                              context.read<ChatBloc>().add(ClearQuizState());
                             });
                           },
                           icon: const Icon(Icons.quiz),
