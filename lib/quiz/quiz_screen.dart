@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gemma/core/chat.dart'; // For InferenceChat
-// Removed: import 'package:flutter_gemma/core/model.dart'; // No longer need InferenceModel directly here
 
 import 'package:anticipatorygpt/quiz/quiz_model.dart';
 import 'package:anticipatorygpt/quiz/quiz_bloc.dart';
@@ -59,11 +58,14 @@ class QuizScreen extends StatelessWidget {
                 final isExplanationLoading = state is QuizLoadingExplanation &&
                     state.questionIndexLoading == index;
 
+                // Note: currentExplanationText is now determined inside QuizQuestionCard's BlocBuilder
+                // This variable is no longer directly used here for passing to QuizQuestionCard.
+
                 return QuizQuestionCard(
                   questionIndex: index,
                   question: question,
                   selectedAnswer: selectedAnswer,
-                  explanation: explanation,
+                  // explanation: currentExplanationText, // Removed: Explanation is now handled by internal BlocBuilder
                   isExplanationLoading: isExplanationLoading,
                   onOptionSelected: (optionIndex) {
                     context.read<QuizBloc>().add(
@@ -98,7 +100,7 @@ class QuizQuestionCard extends StatelessWidget {
   final int questionIndex;
   final Question question;
   final int? selectedAnswer;
-  final String? explanation;
+  // final String? explanation; // Removed: Explanation is now handled by internal BlocBuilder
   final bool isExplanationLoading;
   final ValueChanged<int> onOptionSelected;
   final VoidCallback onRequestExplanation;
@@ -108,7 +110,7 @@ class QuizQuestionCard extends StatelessWidget {
     required this.questionIndex,
     required this.question,
     required this.selectedAnswer,
-    required this.explanation,
+    // required this.explanation, // Removed
     required this.isExplanationLoading,
     required this.onOptionSelected,
     required this.onRequestExplanation,
@@ -139,7 +141,7 @@ class QuizQuestionCard extends StatelessWidget {
             const SizedBox(height: 16),
             ...question.options.asMap().entries.map((entry) {
               final optionIndex = entry.key;
-              final Option option = entry.value; // Changed from String to Option
+              final Option option = entry.value;
               final bool isCorrectOption = optionIndex == question.correctAnswerIndex;
               final bool isSelected = optionIndex == selectedAnswer;
 
@@ -153,16 +155,16 @@ class QuizQuestionCard extends StatelessWidget {
               }
 
               final Color primaryColorWithOpacity = Color.fromARGB(
-                (theme.colorScheme.primary.a * 255.0 * 0.7).round() & 0xff, // Apply opacity to alpha
-                (theme.colorScheme.primary.r * 255.0).round() & 0xff, // Get red component
-                (theme.colorScheme.primary.g * 255.0).round() & 0xff, // Get green component
-                (theme.colorScheme.primary.b * 255.0).round() & 0xff, // Get blue component
+                (theme.colorScheme.primary.a * 255.0 * 0.7).round() & 0xff,
+                (theme.colorScheme.primary.r * 255.0).round() & 0xff,
+                (theme.colorScheme.primary.g * 255.0).round() & 0xff,
+                (theme.colorScheme.primary.b * 255.0).round() & 0xff,
               );
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: ChoiceChip(
-                  label: Text('${String.fromCharCode(65 + optionIndex)}. ${option.text}'), // Access option.text
+                  label: Text('${String.fromCharCode(65 + optionIndex)}. ${option.text}'),
                   selected: isSelected,
                   onSelected: hasAnswered ? null : (selected) {
                     if (selected) {
@@ -211,30 +213,67 @@ class QuizQuestionCard extends StatelessWidget {
                 ),
               ),
             ],
-            if (explanation != null && !isExplanationLoading) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Explanation:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                explanation!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color.fromARGB(
-                    (theme.colorScheme.onSurface.a * 255.0 * 0.8).round() & 0xff,
-                    (theme.colorScheme.onSurface.r * 255.0).round() & 0xff,
-                    (theme.colorScheme.onSurface.g * 255.0).round() & 0xff,
-                    (theme.colorScheme.onSurface.b * 255.0).round() & 0xff,
-                  ),
-                ),
-              ),
-            ],
+            // Display explanation text (either streaming or final)
+            // Use BlocBuilder to listen for explanation state changes specifically for this question
+            BlocBuilder<QuizBloc, QuizState>(
+              buildWhen: (previousState, currentState) {
+                // Only rebuild if the explanation for THIS question has changed or is streaming
+                final bool wasLoadingThisQuestion = previousState is QuizLoadingExplanation && previousState.questionIndexLoading == questionIndex;
+                final bool isLoadingThisQuestion = currentState is QuizLoadingExplanation && currentState.questionIndexLoading == questionIndex;
+
+                final String? prevExplanation = previousState.explanations[questionIndex];
+                final String? currentExplanation = currentState.explanations[questionIndex];
+
+                final bool explanationChanged = prevExplanation != currentExplanation;
+                final bool streamingFragmentChanged = isLoadingThisQuestion && previousState.streamingExplanationFragment != currentState.streamingExplanationFragment;
+
+                return wasLoadingThisQuestion || isLoadingThisQuestion || explanationChanged || streamingFragmentChanged;
+              },
+              builder: (context, state) {
+                final bool currentIsExplanationLoading = state is QuizLoadingExplanation && state.questionIndexLoading == questionIndex;
+                final String? currentExplanationText;
+
+                if (currentIsExplanationLoading) {
+                  currentExplanationText = state.streamingExplanationFragment?.isNotEmpty == true
+                      ? state.streamingExplanationFragment
+                      : 'Getting Explanation...';
+                } else {
+                  currentExplanationText = state.explanations[questionIndex]; // Get final explanation from state
+                }
+
+                if (currentExplanationText != null && currentExplanationText.isNotEmpty) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      Text(
+                        'Explanation:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        currentExplanationText,
+                        // No need for ValueKey here, as BlocBuilder handles rebuilds
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color.fromARGB(
+                            (theme.colorScheme.onSurface.a * 255.0 * 0.8).round() & 0xff,
+                            (theme.colorScheme.onSurface.r * 255.0).round() & 0xff,
+                            (theme.colorScheme.onSurface.g * 255.0).round() & 0xff,
+                            (theme.colorScheme.onSurface.b * 255.0).round() & 0xff,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink(); // Hide if no explanation
+              },
+            ),
           ],
         ),
       ),

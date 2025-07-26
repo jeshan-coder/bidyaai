@@ -8,16 +8,18 @@ sealed class QuizState extends Equatable
   final Quiz? quiz;
   final Map<int,int?> userAnswers;
   final Map<int,String?> explanations;
+  final String? streamingExplanationFragment;
 
   const QuizState({
     this.quiz,
     this.userAnswers=const{},
-    this.explanations=const{}
+    this.explanations=const{},
+    this.streamingExplanationFragment
 });
 
   @override
   // TODO: implement props
-  List<Object?> get props => [quiz,userAnswers,explanations];
+  List<Object?> get props => [quiz,userAnswers,explanations,streamingExplanationFragment];
 
 }
 
@@ -29,11 +31,11 @@ class QuizDisplay extends QuizState
 {
   const QuizDisplay({required super.quiz,
   super.userAnswers,
-  super.explanations});
+  super.explanations,super.streamingExplanationFragment});
 
   @override
   // TODO: implement props
-  List<Object?> get props => [quiz,userAnswers,explanations];
+  List<Object?> get props => [quiz,userAnswers,explanations,streamingExplanationFragment];
 }
 
 class QuizLoadingExplanation extends QuizState
@@ -44,12 +46,13 @@ class QuizLoadingExplanation extends QuizState
     required super.quiz,
     required super.userAnswers,
     required super.explanations,
-    required this.questionIndexLoading
+    required this.questionIndexLoading,
+    super.streamingExplanationFragment
 });
 
   @override
   // TODO: implement props
-  List<Object?> get props => [quiz,userAnswers,explanations,questionIndexLoading];
+  List<Object?> get props => [quiz,userAnswers,explanations,questionIndexLoading,streamingExplanationFragment];
 }
 
 class QuizError extends QuizState
@@ -60,11 +63,12 @@ class QuizError extends QuizState
     required this.error,
     super.quiz,
     super.userAnswers,
-    super.explanations
+    super.explanations,
+    super.streamingExplanationFragment
 });
 
   @override
-  List<Object?> get props => [error, quiz, userAnswers, explanations];
+  List<Object?> get props => [error, quiz, userAnswers, explanations,streamingExplanationFragment];
 }
 
 
