@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gemma/core/chat.dart'; // For InferenceChat
-import 'package:flutter_gemma/core/model.dart'; // For InferenceModel
+// Removed: import 'package:flutter_gemma/core/model.dart'; // No longer need InferenceModel directly here
 
 import 'package:anticipatorygpt/quiz/quiz_model.dart';
 import 'package:anticipatorygpt/quiz/quiz_bloc.dart';
 import 'package:anticipatorygpt/quiz/quiz_event.dart';
 import 'package:anticipatorygpt/quiz/quiz_state.dart';
-import 'package:flutter_gemma/flutter_gemma.dart';
+
 /// A dedicated screen for displaying and interacting with a generated quiz.
 class QuizScreen extends StatelessWidget {
   final Quiz quiz;
-  final InferenceModel inferenceModel; // Now takes InferenceModel
+  final InferenceChat chatInstance; // Changed to take InferenceChat
 
   const QuizScreen({
     super.key,
     required this.quiz,
-    required this.inferenceModel,
+    required this.chatInstance,
   });
 
   @override
@@ -28,7 +28,7 @@ class QuizScreen extends StatelessWidget {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
       body: BlocProvider(
-        create: (context) => QuizBloc(inferenceModel: inferenceModel)..add(InitializeQuiz(quiz: quiz)),
+        create: (context) => QuizBloc(chat: chatInstance)..add(InitializeQuiz(quiz: quiz)), // Pass chatInstance
         child: BlocConsumer<QuizBloc, QuizState>(
           listener: (context, state) {
             if (state is QuizError) {

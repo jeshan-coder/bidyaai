@@ -146,7 +146,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               AppRoutes.quiz,
                               arguments: {
                                 'quiz': state.generatedQuiz,
-                                'inferenceModel': context.read<ChatBloc>().inferenceModel, // Pass InferenceModel
+                                'chatInstance': context.read<ChatBloc>().chatInstance, // Pass InferenceModel
                               },
                             ).then((_) {
                               // Clear quiz state in ChatBloc after returning from quiz screen

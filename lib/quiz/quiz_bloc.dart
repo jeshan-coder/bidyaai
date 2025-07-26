@@ -1,5 +1,5 @@
 
-import 'package:anticipatorygpt/management/model_settings.dart';
+import 'dart:async';
 import 'package:anticipatorygpt/management/prompt_management.dart';
 import 'package:anticipatorygpt/quiz/quiz_event.dart';
 import 'package:anticipatorygpt/quiz/quiz_state.dart';
@@ -9,9 +9,9 @@ import 'package:flutter_gemma/flutter_gemma.dart';
 
 class QuizBloc extends Bloc<QuizEvent,QuizState>
 {
-  final InferenceModel _inferenceModel;
+  final InferenceChat _chat;
   
-  QuizBloc({required InferenceModel inferenceModel}):_inferenceModel=inferenceModel,super(QuizInitial())
+  QuizBloc({required InferenceChat chat}):_chat=chat,super(QuizInitial())
   {
     on<InitializeQuiz>(_onInitializeQuiz);
     on<SubmitAnswer>(_onSubmitAnswer);
@@ -43,80 +43,92 @@ class QuizBloc extends Bloc<QuizEvent,QuizState>
   }
 
 
-  Future<void> _onRequestExplanation(RequestExplanation event, Emitter<QuizState> emit) async
-  {
-    if(state is !QuizDisplay && state is !QuizLoadingExplanation)
-      {
-        return;
-      }
+  Future<void> _onRequestExplanation(
+      RequestExplanation event, Emitter<QuizState> emit) async {
+    if (state is! QuizDisplay && state is! QuizLoadingExplanation) {
+      return;
+    }
+    print("on request explanation called ");
+    final currentState = state;
+    final currentQuiz = currentState.quiz;
+    final currentUserAnswers = currentState.userAnswers;
+    final currentExplanations = Map<int, String?>.from(currentState.explanations);
 
-    final currentState=state;
-    final currentQuiz=currentState.quiz;
-    final currentUserAnswers=currentState.userAnswers;
-    final currentExplanations= Map<int,String?>.from(currentState.explanations);
-  
-    print("onRequest Explanation:");
-    print("current state is $currentState");
-    print("current user answers is ${currentState.userAnswers}");
-    
-    emit(QuizLoadingExplanation(quiz: currentQuiz, 
-        userAnswers: currentUserAnswers, 
-        explanations: currentExplanations, 
-        questionIndexLoading: event.questionIndex));
-    
-    InferenceChat? explanationChat;
+    emit(QuizLoadingExplanation(
+      quiz: currentQuiz,
+      userAnswers: currentUserAnswers,
+      explanations: currentExplanations,
+      questionIndexLoading: event.questionIndex,
+    ));
 
-    try{
-      explanationChat = await _inferenceModel.createChat(
-        supportImage: false, // Explanations are text-only
-        temperature: ModelSettings.defaultTemperature,
-        topK: ModelSettings.defaultTopK,
-        topP: ModelSettings.defaultTopP,
-      );
+    InferenceChat? explanationChat; // Declare temporary chat session
+    try {
+      print("QuizBloc: Creating temporary chat session for explanation...");
 
+      await _chat.clearHistory();
+      print("explaination chat called .");
       final explanationPrompt = PromptManager.generateExplanationPrompt(
         event.questionText,
         event.options,
         event.selectedOptionIndex,
       );
+      print("QuizBloc: Explanation prompt: $explanationPrompt");
 
-      await explanationChat.addQueryChunk(Message.text(text: explanationPrompt, isUser: true));
+      await _chat.addQueryChunk(Message.text(text: explanationPrompt, isUser: true));
+
+      print("QuizBloc: Sending query chunk for explanation...");
 
       String fullExplanation = '';
-      final responseStream = explanationChat.generateChatResponseAsync();
+      final responseStream = _chat.generateChatResponseAsync();
+      print("QuizBloc: Generating response stream for explanation...");
 
-      await for (final responsePart in responseStream) {
+      // Add a timeout for the explanation generation
+      await for (final responsePart in responseStream.timeout(const Duration(seconds: 30))) { // 30-second timeout
         fullExplanation += responsePart;
+        print("QuizBloc: Received explanation part: $responsePart");
       }
+      print("QuizBloc: Full explanation received: $fullExplanation");
+
 
       currentExplanations[event.questionIndex] = fullExplanation;
 
+      print("QuizBloc: Emitting QuizDisplay with explanation.");
       emit(QuizDisplay(
         quiz: currentQuiz,
         userAnswers: currentUserAnswers,
         explanations: currentExplanations,
       ));
-    }
-    catch(e)
-    {
-      print("Error generating explanation: $e");
-
-      emit(QuizError(error: 'Failed to get explanation: $e',
-      quiz: currentQuiz,
-      userAnswers: currentUserAnswers,
-      explanations: currentExplanations));
-
-      emit(QuizDisplay(
+    } on TimeoutException catch (e) {
+      print("QuizBloc: Explanation generation timed out: $e");
+      emit(QuizError(
+        error: 'Explanation generation timed out. Please try again.',
         quiz: currentQuiz,
         userAnswers: currentUserAnswers,
         explanations: currentExplanations,
       ));
+      emit(QuizDisplay( // Revert to display state after error
+        quiz: currentQuiz,
+        userAnswers: currentUserAnswers,
+        explanations: currentExplanations,
+      ));
+    } catch (e) {
+      print("QuizBloc: Error generating explanation: $e");
+      emit(QuizError(
+        error: 'Failed to get explanation: $e',
+        quiz: currentQuiz,
+        userAnswers: currentUserAnswers,
+        explanations: currentExplanations,
+      ));
+      emit(QuizDisplay( // Revert to display state after error
+        quiz: currentQuiz,
+        userAnswers: currentUserAnswers,
+        explanations: currentExplanations,
+      ));
+    } finally {
+      // The temporary chat session will be garbage collected when it goes out of scope.
+      // No explicit close() method on InferenceChat.
+      print("QuizBloc: Explanation chat session scope ended.");
     }
-    finally{
-
-    }
-  
-  
   }
  
 }

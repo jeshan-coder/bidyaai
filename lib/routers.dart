@@ -3,6 +3,7 @@ import 'package:anticipatorygpt/quiz/quiz_model.dart';
 import 'package:anticipatorygpt/quiz/quiz_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_gemma/core/chat.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'chat/ChatScreen.dart';
 import 'chat/chat_bloc.dart';
@@ -40,9 +41,9 @@ class AppRouter {
       // Extract arguments for QuizScreen
         final args = settings.arguments as Map<String, dynamic>;
         final Quiz quiz = args['quiz'] as Quiz;
-        final InferenceModel inferenceModel = args['inferenceModel'] as InferenceModel; // InferenceChat instance
+        final InferenceChat chatInstance= args['chatInstance'] as InferenceChat; // InferenceChat instance
 
-        if (inferenceModel == null) {
+        if (chatInstance == null) {
           // Handle error if chatInstance is not passed or is null
           return MaterialPageRoute(builder: (_) =>
           const Center(child: Text('Error:AI Model not available for quiz.')));
@@ -51,7 +52,7 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) =>
             QuizScreen(
               quiz: quiz,
-              inferenceModel:inferenceModel,
+              chatInstance:chatInstance,
             ));
 
       default:

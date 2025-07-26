@@ -61,7 +61,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   StreamSubscription? _responseSubscription;
 
-  InferenceModel? get inferenceModel =>_inferenceModel;
+  InferenceChat? get chatInstance =>_chat;
 
   ChatBloc(this._modelRepository) : super(ChatInitial()) {
     // on<ChatEvent>((event, emit) {
@@ -69,6 +69,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // });
     on<InitializeChat>(_onInitializeChat);
     on<SendMessage>(_onSendMessage);
+    on<ClearQuizState>(_onClearQuizState);
     // _initialize();
   }
 
@@ -100,17 +101,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           throw Exception("Isolate failed to initialize the model");
         }
       const backend=PreferredBackend.gpu;
-      
+
       _inferenceModel=await _gemmaPlugin.createModel(modelType: ModelType.gemmaIt,preferredBackend: backend,supportImage: true);
-      
+
       print("✅ AI Model Initialized successfully with Backend: ${backend.name}");
-      
+
       _chat=await _inferenceModel!.createChat(supportImage: true,
       temperature: ModelSettings.defaultTemperature,
       topK: ModelSettings.defaultTopK,
       topP: ModelSettings.defaultTopP,
       );
-      
+
       emit(ChatInitial());
     }
     catch(e)
@@ -223,6 +224,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try{
       final Message promptMessage;
 
+
+      // await _chat!.clearHistory();
+
       if(event.imageBytes!=null) {
         promptMessage = Message.withImage(text: promptToModel, imageBytes:event.imageBytes!,isUser: true);
       } else {
@@ -299,11 +303,27 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  void _onClearQuizState(ClearQuizState event, Emitter<ChatState> emit) {
+  void _onClearQuizState(ClearQuizState event, Emitter<ChatState> emit) async{
     // Emit a ChatLoaded state, preserving messages but clearing quiz flags
-    emit(ChatLoaded(messages: state.messages, quizReady: false, generatedQuiz: null));
+    
+    await _chat?.clearHistory();
+    // _inferenceModel?.createChat(
+    //   supportImage: true,
+    //   temperature: ModelSettings.defaultTemperature,
+    //   topK: ModelSettings.defaultTopK,
+    //   topP: ModelSettings.defaultTopP
+    // ).then((newChat){
+    //   _chat=newChat;
+      emit(ChatLoaded(messages: state.messages, quizReady: false, generatedQuiz: null));
+    // }).catchError((error){
+    //   print("Error re-creating main chat session: $error");
+    //
+    //   emit(ChatError(error: 'Failed to reset chat session: $error', messages:state.messages,quizReady: false,generatedQuiz: null));
+    // });
+    
+    
   }
-  
+
   @override
   Future<void> close() {
     // _chatPlugin.dispose();
