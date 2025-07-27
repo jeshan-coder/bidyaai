@@ -1,3 +1,5 @@
+import 'package:anticipatorygpt/camera_live/camera_bloc.dart';
+import 'package:anticipatorygpt/camera_live/camera_screen.dart';
 import 'package:anticipatorygpt/model_download/downloadscreen.dart';
 import 'package:anticipatorygpt/quiz/quiz_model.dart';
 import 'package:anticipatorygpt/quiz/quiz_screen.dart';
@@ -16,6 +18,7 @@ class AppRoutes {
   static const String download = "/download";
   static const String chat = "/chat";
   static const String quiz="/quiz";
+  static const String cameraLive="/cameraLive";
 }
 
 class AppRouter {
@@ -54,7 +57,21 @@ class AppRouter {
               quiz: quiz,
               chatInstance:chatInstance,
             ));
-
+      
+        
+      case AppRoutes.cameraLive:
+        final args=settings.arguments as Map<String,dynamic>;
+        final InferenceChat chatInstance= args['chatInstance'] as InferenceChat;
+        
+        if(chatInstance==null)
+          {
+            return MaterialPageRoute(builder: (_)=>const Center(child: Text("Error: chat instance not available for camera AI"),));
+            
+          }
+        return MaterialPageRoute(builder: (_)=>BlocProvider(create:(context)=>CameraBloc(chat: chatInstance),
+        child: CameraScreen(chatInstance: chatInstance),));
+        
+        
       default:
       // Fallback for undefined routes
         return MaterialPageRoute(builder: (_) => NotFound());

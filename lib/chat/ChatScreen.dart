@@ -76,7 +76,19 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true, // allows body to shift for keyboard
-      appBar: AppBar(title: const Text("Chat")),
+      appBar: AppBar(title: const Text("Chat"),
+      actions: [
+        BlocBuilder<ChatBloc, ChatState>(
+  builder: (context, state) {
+    final bool isModelReady= state is ChatInitial || state is ChatLoaded;
+    return IconButton(onPressed:isModelReady? (){
+          Navigator.of(context).pushNamed(AppRoutes.cameraLive,arguments: {
+            'chatInstance':context.read<ChatBloc>().chatInstance
+          });
+        }:null, icon:const Icon(Icons.videocam));
+  },
+)
+      ],),
       body: Column(
         children: [
           Expanded(

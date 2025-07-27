@@ -58,5 +58,10 @@ class PromptManager
           ''';
   }
 
+  static String generateImageUnderstandingPrompt(String textQuery)
+  {
+    return "Analyze the provided image and respond to the following question: \"$textQuery\"";
+  }
+
 
 }
