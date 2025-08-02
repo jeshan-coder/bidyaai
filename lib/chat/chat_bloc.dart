@@ -61,6 +61,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   StreamSubscription? _responseSubscription;
 
+  bool _isContextAware=false;
+
+  String _currentLanguageCode='en-Us';
+
   InferenceChat? get chatInstance =>_chat;
 
   ChatBloc(this._modelRepository) : super(ChatInitial()) {
@@ -70,6 +74,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<InitializeChat>(_onInitializeChat);
     on<SendMessage>(_onSendMessage);
     on<ClearQuizState>(_onClearQuizState);
+    on<ToggleContext>(_onToggleContext);
     // _initialize();
   }
 
@@ -117,7 +122,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     catch(e)
     {
         print("❌ Failed to initialize AI model: $e");
-        emit(ChatError(error:'Failed to initialize AI model: $e', messages: []));
+        emit(ChatError(error:'Failed to initialize AI model: $e', messages: [], isContextAware:state.isContextAware, languageCode:state.languageCode));
     }
   }
 
@@ -190,7 +195,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   {
     if (_chat==null)
     {
-      emit(ChatError(error: 'Chat session is not initialized.', messages: state.messages));
+      emit(ChatError(error: 'Chat session is not initialized.', messages: state.messages, isContextAware:state.isContextAware, languageCode:state.languageCode));
       return;
     }
 
@@ -201,13 +206,46 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final updatedMessages = List<ChatMessage>.from(state.messages);
     updatedMessages.add(userMessage); // Add the user's message
 
+    if (userMessageText.toLowerCase() == '/aware') {
+      _isContextAware = true;
+      final confirmationMessage = ChatMessage(text: 'AI is now aware of chat history.', isFromUser: false);
+      final finalMessages = List<ChatMessage>.from(updatedMessages)
+        ..add(confirmationMessage);
+      emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode:state.languageCode));
+      return;
+    } else if (userMessageText.toLowerCase() == '/clear') {
+      _isContextAware = false;
+      await _chat!.clearHistory();
+      final confirmationMessage = ChatMessage(text: 'Chat history has been cleared.', isFromUser: false);
+      final finalMessages = List<ChatMessage>.from(updatedMessages)
+        ..add(confirmationMessage);
+      emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode:state.languageCode));
+      return;
+    }
+    else if (userMessageText.toLowerCase().startsWith('/language')) {
+      final language = userMessageText.substring('/language'.length).trim().toLowerCase();
+      // Remove the _languageMap and use a more flexible approach
+      if (language.isNotEmpty) {
+        _currentLanguageCode = language; // Directly use the provided string as the code
+        await _chat!.clearHistory();
+        final confirmationMessage = ChatMessage(text: 'AI will now respond in ${language}.', isFromUser: false);
+        final finalMessages = List<ChatMessage>.from(updatedMessages)..add(confirmationMessage);
+        emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode: _currentLanguageCode));
+      } else {
+        final errorMessage = ChatMessage(text: 'Please specify a language after /language.', isFromUser: false);
+        final finalMessages = List<ChatMessage>.from(updatedMessages)..add(errorMessage);
+        emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode: _currentLanguageCode));
+      }
+      return;
+    }
+
     // Check if the user is requesting a quiz
-    final isQuizRequest = userMessageText.toLowerCase().startsWith('make quiz on');
+    final isQuizRequest = userMessageText.toLowerCase().startsWith('/quiz');
     String promptToModel;
     String loadingMessage;
 
     if (isQuizRequest) {
-      final topic = userMessageText.substring('make quiz on'.length).trim();
+      final topic = userMessageText.substring('/quiz'.length).trim();
       promptToModel = PromptManager.generateQuizRequestPrompt(topic.isEmpty ? 'general knowledge' : topic);
       loadingMessage = 'Generating quiz on ${topic.isEmpty ? 'general knowledge' : topic}...';
     } else {
@@ -219,18 +257,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final modelResponsePlaceholder = ChatMessage(text: loadingMessage, isFromUser: false);
     updatedMessages.add(modelResponsePlaceholder); // Add the placeholder to the mutable list
 
-    emit(ChatLoading(messages: updatedMessages)); // Emit loading state with placeholder
+    emit(ChatLoading(messages: updatedMessages, languageCode:state.languageCode, isContextAware:state.isContextAware)); // Emit loading state with placeholder
 
     try{
       final Message promptMessage;
 
+      if(!state.isContextAware) {
+        await _chat!.clearHistory();
+      }
+      String localizedPrompt='Respond in ${_currentLanguageCode}:$promptToModel';
 
-      // await _chat!.clearHistory();
 
       if(event.imageBytes!=null) {
-        promptMessage = Message.withImage(text: promptToModel, imageBytes:event.imageBytes!,isUser: true);
+        promptMessage = Message.withImage(text: localizedPrompt, imageBytes:event.imageBytes!,isUser: true);
       } else {
-        promptMessage = Message.text(text: promptToModel,isUser: true);
+        promptMessage = Message.text(text: localizedPrompt,isUser: true);
       }
 
       await _chat!.addQueryChunk(promptMessage);
@@ -247,7 +288,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           final currentMessages = List<ChatMessage>.from(updatedMessages);
           // Replace the last message (placeholder) with the current streaming response
           currentMessages[currentMessages.length - 1] = ChatMessage(text: fullResponse, isFromUser: false);
-          emit(ChatLoading(messages: currentMessages));
+          emit(ChatLoading(messages: currentMessages, languageCode:state.languageCode, isContextAware:state.isContextAware));
         }
       }
 
@@ -278,18 +319,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
           // Add a clean, concise message for quiz readiness
           finalMessages.add(ChatMessage(text: 'Your quiz is ready! Tap "Start Quiz!" below.', isFromUser: false));
-          emit(ChatQuizReady(messages: finalMessages, generatedQuiz: generatedQuiz));
+          emit(ChatQuizReady(messages: finalMessages, generatedQuiz: generatedQuiz,isContextAware: state.isContextAware, languageCode:state.languageCode));
 
         } catch (e) {
           print("Failed to parse quiz JSON: $e");
           // If JSON parsing fails, treat it as a regular text response with an error
           finalMessages.add(ChatMessage(text: 'Failed to generate quiz. Please try again or rephrase your request. Error: $e', isFromUser: false));
-          emit(ChatLoaded(messages: finalMessages));
+          emit(ChatLoaded(messages: finalMessages,isContextAware: state.isContextAware, languageCode:state.languageCode));
         }
       } else {
         // For regular chat, add the full response
         finalMessages.add(ChatMessage(text: fullResponse, isFromUser: false));
-        emit(ChatLoaded(messages: finalMessages));
+        emit(ChatLoaded(messages: finalMessages,isContextAware: state.isContextAware, languageCode:state.languageCode));
       }
 
     }
@@ -299,13 +340,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final List<ChatMessage> errorMessages = List<ChatMessage>.from(updatedMessages);
       errorMessages.removeLast(); // Remove placeholder
       errorMessages.add(ChatMessage(text: 'Failed to get response from model: $e', isFromUser: false));
-      emit(ChatError(error: 'Failed to get response from model: $e', messages: errorMessages));
+      emit(ChatError(error: 'Failed to get response from model: $e', messages: errorMessages, isContextAware:state.isContextAware, languageCode: ''));
     }
   }
 
   void _onClearQuizState(ClearQuizState event, Emitter<ChatState> emit) async{
     // Emit a ChatLoaded state, preserving messages but clearing quiz flags
-    
+
     await _chat?.clearHistory();
     // _inferenceModel?.createChat(
     //   supportImage: true,
@@ -314,14 +355,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     //   topP: ModelSettings.defaultTopP
     // ).then((newChat){
     //   _chat=newChat;
-      emit(ChatLoaded(messages: state.messages, quizReady: false, generatedQuiz: null));
+      emit(ChatLoaded(messages: state.messages, quizReady: false, generatedQuiz: null,isContextAware: _isContextAware, languageCode:state.languageCode));
     // }).catchError((error){
     //   print("Error re-creating main chat session: $error");
     //
     //   emit(ChatError(error: 'Failed to reset chat session: $error', messages:state.messages,quizReady: false,generatedQuiz: null));
     // });
-    
-    
+
+
+  }
+
+  // New handler for ToggleContext event
+  void _onToggleContext(ToggleContext event, Emitter<ChatState> emit) {
+    _isContextAware = !_isContextAware;
+    // Emit a ChatLoaded state that reflects the new context mode.
+    // The UI can react to this if needed, but it's primarily for internal BLoC logic.
+    emit(ChatLoaded(messages: state.messages, isContextAware: _isContextAware, languageCode:state.languageCode));
   }
 
   @override

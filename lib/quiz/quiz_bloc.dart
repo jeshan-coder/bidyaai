@@ -19,9 +19,11 @@ import 'package:anticipatorygpt/management/model_settings.dart';
 /// BLoC responsible for managing the state and logic of the quiz feature.
 class QuizBloc extends Bloc<QuizEvent, QuizState> {
   final InferenceChat _chat; // Changed to take InferenceChat
+  final String _currentLanguageCode;
 
-  QuizBloc({required InferenceChat chat}) // Changed constructor parameter
+  QuizBloc({required InferenceChat chat,required String languageCode}) // Changed constructor parameter
       : _chat = chat,
+        _currentLanguageCode=languageCode,
         super(QuizInitial()) {
     on<InitializeQuiz>(_onInitializeQuiz);
     on<SubmitAnswer>(_onSubmitAnswer);
@@ -84,9 +86,13 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
         event.options,
         event.selectedOptionIndex,
       );
+
+      final String localizedPrompt='Respond in ${_currentLanguageCode}:$explanationPrompt';
+
+
       print("QuizBloc: Explanation prompt: $explanationPrompt");
 
-      await _chat.addQueryChunk(Message.text(text: explanationPrompt, isUser: true));
+      await _chat.addQueryChunk(Message.text(text: localizedPrompt, isUser: true));
       print("QuizBloc: Sending query chunk for explanation...");
 
       String fullExplanation = '';
@@ -106,7 +112,7 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
           streamingExplanationFragment: fullExplanation, // Update fragment
         ));
         // Add a small delay to allow UI to update
-        await Future.delayed(const Duration(milliseconds: 50)); // Yield control
+        await Future.delayed(const Duration(milliseconds: 10)); // Yield control
       }
       print("QuizBloc: Full explanation received: $fullExplanation");
 

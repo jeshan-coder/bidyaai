@@ -41,6 +41,7 @@ dependencies:
   dio: ^5.8.0+1
   image_picker: ^1.1.2
   camera: ^0.11.2
+  image: ^4.5.4
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +68,9 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
       - assets/first.png
+      - assets/assist.png
+      - assets/bidya.png
+      - assets/user.png
 #      - assets/gemma-3n-E4B-it-int4.task
   #   - images/a_dot_ham.jpeg
 
@@ -81,6 +85,27 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
+  fonts:
+    - family: Lexend
+      fonts:
+        - asset: assets/fonts/Lexend-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Lexend-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Lexend-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Lexend-Regular.ttf
+          weight: 400 # This is the default "normal" weight
+        - asset: assets/fonts/Lexend-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Lexend-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Lexend-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Lexend-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Lexend-Black.ttf
+          weight: 900
   # fonts:
   #   - family: Schyler
   #     fonts:

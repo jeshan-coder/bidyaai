@@ -25,4 +25,6 @@ class ClearQuizState extends ChatEvent
 
 }
 
+class ToggleContext extends ChatEvent{}
+
 

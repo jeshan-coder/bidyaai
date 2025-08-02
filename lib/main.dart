@@ -2,6 +2,7 @@ import 'package:anticipatorygpt/home/home.dart';
 import 'package:anticipatorygpt/model_download/download_model_bloc.dart';
 import 'package:anticipatorygpt/model_download/downloadscreen.dart';
 import 'package:anticipatorygpt/routers.dart';
+import 'package:anticipatorygpt/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'model_download/model_repository.dart';
@@ -30,13 +31,7 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           title: 'Anticipatory gpt',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            primarySwatch: Colors.indigo,
-            useMaterial3: true,
-            brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            cardColor: const Color(0xFF1E1E1E),
-          ),
+          theme:AppTheme.mainTheme,
           initialRoute: AppRoutes.download,
           onGenerateRoute: AppRouter.generateRoute,
         ),

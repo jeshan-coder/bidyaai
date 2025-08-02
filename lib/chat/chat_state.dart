@@ -24,11 +24,13 @@ sealed class ChatState extends Equatable{
   // for quiz
   final bool quizReady;
   final Quiz? generatedQuiz;
+  final bool isContextAware;
+  final String languageCode;
 
-  const ChatState({this.messages=const [],this.quizReady=false,this.generatedQuiz});
+  const ChatState({this.messages=const [],this.quizReady=false,this.generatedQuiz,this.isContextAware=false,this.languageCode='en-Us'});
 
   @override
-  List<Object?> get props => [messages,quizReady,generatedQuiz];
+  List<Object?> get props => [messages,quizReady,generatedQuiz,isContextAware,languageCode];
 }
 
 // state while the ai model is ready but no message have been sent yet
@@ -44,22 +46,22 @@ class ChatModelLoading extends ChatState{}
 // state when the model is processing a message
 class ChatLoading extends ChatState
 {
-  const ChatLoading({required super.messages,super.quizReady,super.generatedQuiz});
+  const ChatLoading({required super.messages,super.quizReady,super.generatedQuiz,required super.isContextAware,required super.languageCode});
 }
 
 class ChatLoaded extends ChatState
 {
-  const ChatLoaded({required super.messages,super.quizReady,super.generatedQuiz});
+  const ChatLoaded({required super.messages,super.quizReady,super.generatedQuiz,required super.isContextAware,required super.languageCode});
 }
 
 // for quiz
 // successfully generated and is ready
 class ChatQuizReady extends ChatState
 {
-  const ChatQuizReady({required super.messages,required super.generatedQuiz}):super(quizReady: true);
+  const ChatQuizReady({required super.messages,required super.generatedQuiz,required super.isContextAware,required super.languageCode}):super(quizReady: true);
 
   @override
-  List<Object?> get props => [messages,generatedQuiz];
+  List<Object?> get props => [messages,generatedQuiz,isContextAware,languageCode];
 }
 
 
@@ -69,11 +71,11 @@ class ChatError extends ChatState
 {
   final String error;
 
-  const ChatError({required this.error,required super.messages,super.quizReady,super.generatedQuiz});
+  const ChatError({required this.error,required super.messages,super.quizReady,super.generatedQuiz,required super.isContextAware,required super.languageCode});
 
 
   @override
   // TODO: implement props
-  List<Object?> get props => [error,messages,quizReady,generatedQuiz];
+  List<Object?> get props => [error,messages,quizReady,generatedQuiz,isContextAware,languageCode];
 }
 

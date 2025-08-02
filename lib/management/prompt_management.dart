@@ -6,7 +6,7 @@ class PromptManager
 //   for general chat messages
   static String generateChatPrompt(String userMessage)
   {
-    return userMessage;
+    return "You are a concise and direct assistant. Respond in the specified language only. Do not provide any translations, extra comments, or information in other languages. Answer the following question directly: \n\n$userMessage";
   }
 
   static String generateQuizRequestPrompt(String topic) {
@@ -49,13 +49,16 @@ class PromptManager
     final selectedOptionText= options[selectedOptionIndex].text;
 
     return '''
-      Explain why the answer to the following question is correct or incorrect, considering the user selected option "${String.fromCharCode(65 + selectedOptionIndex)} (${selectedOptionText})".
-      
-      Question: "$question"
-      Options: ${options.asMap().entries.map((e) => '${String.fromCharCode(65 + e.key)}) ${e.value}').join(', ')}
-      
-      Provide a concise explanation.
-          ''';
+Provide a concise and to-the-point explanation for the question below.
+Explain why the correct answer is correct, and why the user's selected option is incorrect if it is. Do not repeat the question or options in your response.
+
+Question: "$question"
+User's Selection: "${String.fromCharCode(65 + selectedOptionIndex)}) ${selectedOptionText}"
+Correct Answer Index: [Correct Answer Index]
+Options: ${options.asMap().entries.map((e) => '${String.fromCharCode(65 + e.key)}) ${e.value.text}').join(', ')}
+
+Explain this concisely and to the point.
+''';
   }
 
   static String generateImageUnderstandingPrompt(String textQuery)

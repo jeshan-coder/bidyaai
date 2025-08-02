@@ -3,11 +3,20 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
+import 'package:image/image.dart' as img; // IMPORT for image processing
 
 import 'package:anticipatorygpt/camera_live/camera_bloc.dart';
 import 'package:anticipatorygpt/camera_live/camera_event.dart';
 import 'package:anticipatorygpt/camera_live/camera_state.dart';
 import 'package:flutter_gemma/core/chat.dart'; // For InferenceChat
+import 'package:anticipatorygpt/theme.dart'; // IMPORT THEME
+
+// --- IMPORTANT DEPENDENCY ---
+// For image preprocessing to work, please add the 'image' package to your pubspec.yaml:
+//
+// dependencies:
+//   image: ^4.1.7
+//
 
 /// A screen for live camera feed and AI interaction with image input.
 class CameraScreen extends StatefulWidget {
@@ -20,6 +29,7 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
+  // CHANGE: Re-introduced the text controller for the live input field.
   final TextEditingController _textController = TextEditingController();
 
   @override
@@ -32,15 +42,16 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void dispose() {
     _textController.dispose();
-    // CameraBloc will dispose its controller in its own close method
     super.dispose();
   }
 
+  // CHANGE: This method now reads from the text controller and preprocesses the image.
   Future<void> _captureAndSendMessage() async {
     final bloc = context.read<CameraBloc>();
     if (_textController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please type a message to send with the image.')),
+        const SnackBar(
+            content: Text('Please type a message to send with the image.')),
       );
       return;
     }
@@ -49,17 +60,24 @@ class _CameraScreenState extends State<CameraScreen> {
       final CameraController? controller = bloc.state.cameraController;
       if (controller != null && controller.value.isInitialized) {
         try {
-          // Take a picture (this will capture the current frame)
           final XFile imageFile = await controller.takePicture();
           final Uint8List imageBytes = await imageFile.readAsBytes();
 
+          // --- IMAGE PREPROCESSING STEP ---
+          // Decode, resize to 512x512, and re-encode the image.
+          final originalImage = img.decodeImage(imageBytes)!;
+          final resizedImage =
+          img.copyResize(originalImage, width: 512, height: 512);
+          final Uint8List processedImageBytes =
+          Uint8List.fromList(img.encodeJpg(resizedImage));
+          // --- END OF PREPROCESSING ---
+
           bloc.add(CaptureAndSendMessage(
             message: _textController.text.trim(),
-            imageBytes: imageBytes,
+            imageBytes: processedImageBytes, // Send the processed image
           ));
           _textController.clear();
         } catch (e) {
-          print("Error capturing image: $e");
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to capture image: $e')),
           );
@@ -77,8 +95,12 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Live AI Vision'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.clear_all),
@@ -98,23 +120,27 @@ class _CameraScreenState extends State<CameraScreen> {
           }
         },
         builder: (context, state) {
-          if (state is CameraInitial || state is CameraLoading && state.cameraController == null) {
-            return const Center(child: CircularProgressIndicator(value: null)); // Indeterminate loading
+          if (state is CameraInitial ||
+              state is CameraLoading && state.cameraController == null) {
+            return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                ));
           }
 
-          if (state.cameraController == null || !state.cameraController!.value.isInitialized) {
-            return const Center(child: Text('Camera not available or initializing...'));
+          if (state.cameraController == null ||
+              !state.cameraController!.value.isInitialized) {
+            return const Center(
+                child: Text('Camera not available or initializing...'));
           }
 
           return Stack(
             children: [
-              // Full-screen camera preview
               Positioned.fill(
                 child: CameraPreview(state.cameraController!),
               ),
-
-              // AI Response Overlay (TOP)
-              if (state.currentResponse != null && state.currentResponse!.isNotEmpty)
+              if (state.currentResponse != null &&
+                  state.currentResponse!.isNotEmpty)
                 Align(
                   alignment: Alignment.topCenter,
                   child: Container(
@@ -131,54 +157,68 @@ class _CameraScreenState extends State<CameraScreen> {
                     ),
                   ),
                 ),
-
-              // Dynamic Input Area / Action Button (BOTTOM)
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom + 16, // Adjust for keyboard
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 16,
                     left: 16,
                     right: 16,
                   ),
-                  child: Builder( // Use Builder to ensure context for conditional rendering
+                  child: Builder(
                     builder: (innerContext) {
                       if (state.isResponding) {
-                        // State 1: AI is processing (loading/streaming)
                         return Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(innerContext).colorScheme.primary),
+                            const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppTheme.primaryColor),
                               strokeWidth: 3,
                             ),
                             const SizedBox(height: 16),
-                            // Only show static "Analyzing..." text here, not streaming response
-                            const Text(
+                            Text(
                               'Analyzing...',
-                              style: TextStyle(color: Colors.white, fontSize: 18),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
                               textAlign: TextAlign.center,
                             ),
                           ],
                         );
-                      } else if (state.currentResponse != null && state.currentResponse!.isNotEmpty) {
-                        // State 2: AI response is complete
-                        return ElevatedButton.icon(
-                          onPressed: () {
-                            innerContext.read<CameraBloc>().add(ClearResponse());
-                          },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('New Query'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(innerContext).colorScheme.secondary,
-                            foregroundColor: Theme.of(innerContext).colorScheme.onSecondary,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                            textStyle: const TextStyle(fontSize: 18),
+                      } else if (state.currentResponse != null &&
+                          state.currentResponse!.isNotEmpty) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              innerContext
+                                  .read<CameraBloc>()
+                                  .add(ClearResponse());
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Ask New Question'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding:
+                              const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24)),
+                              textStyle: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         );
                       } else {
-                        // State 3: Ready for new input (default state)
+                        // CHANGE: Reverted to the live input field and send button UI.
                         return Row(
                           children: [
                             Expanded(
@@ -186,14 +226,15 @@ class _CameraScreenState extends State<CameraScreen> {
                                 controller: _textController,
                                 enabled: !state.isResponding,
                                 decoration: InputDecoration(
-                                  hintText: 'Type a question about the image...',
+                                  hintText: 'Type a question...',
                                   filled: true,
                                   fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(24),
                                     borderSide: BorderSide.none,
                                   ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 14),
                                 ),
                                 style: const TextStyle(color: Colors.black),
                                 onSubmitted: (_) => _captureAndSendMessage(),
@@ -202,8 +243,8 @@ class _CameraScreenState extends State<CameraScreen> {
                             const SizedBox(width: 8),
                             FloatingActionButton(
                               onPressed: _captureAndSendMessage,
-                              backgroundColor: Theme.of(innerContext).colorScheme.primary,
-                              foregroundColor: Theme.of(innerContext).colorScheme.onPrimary,
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
                               child: const Icon(Icons.send),
                             ),
                           ],
