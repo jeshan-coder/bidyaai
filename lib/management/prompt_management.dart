@@ -2,15 +2,21 @@ import '../quiz/quiz_model.dart';
 
 class PromptManager
 {
+  // MODIFICATION: Define a base system message for the BidyaAI persona.
+  static const String _baseSystemMessage =
+      "You are BidyaAI, an educational assistant for primary school students in grades 1 through 10. Your purpose is to provide concise, direct, and helpful educational responses. You must act as a friendly and knowledgeable tutor. Respond in the specified language only. Do not provide any translations, extra comments, or information in other languages. Your responses should be easy for a child to understand. If a user asks about a topic outside of primary school education (grades 1-10), you must respond with 'I cannot help with that as my focus is on primary school education.'.";
 
-//   for general chat messages
+  // MODIFICATION: Use the base system message in the general chat prompt.
   static String generateChatPrompt(String userMessage)
   {
-    return "You are a concise and direct assistant. Respond in the specified language only. Do not provide any translations, extra comments, or information in other languages. Answer the following question directly: \n\n$userMessage";
+    return "$_baseSystemMessage\n\nAnswer the following question directly: \n\n$userMessage";
   }
 
+  // MODIFICATION: Use the base system message in the quiz request prompt.
   static String generateQuizRequestPrompt(String topic) {
     return '''
+      $_baseSystemMessage
+      
       Generate a 3-question multiple-choice quiz about "$topic".
       Each question should have 4 options (A, B, C, D) and indicate the correct answer.
       
@@ -44,11 +50,14 @@ class PromptManager
       ''';
   }
 
+  // MODIFICATION: Use the base system message in the explanation prompt.
   static String generateExplanationPrompt(String question, List<Option> options, int selectedOptionIndex)
   {
     final selectedOptionText= options[selectedOptionIndex].text;
 
     return '''
+    $_baseSystemMessage
+    
 Provide a concise and to-the-point explanation for the question below.
 Explain why the correct answer is correct, and why the user's selected option is incorrect if it is. Do not repeat the question or options in your response.
 
@@ -61,10 +70,9 @@ Explain this concisely and to the point.
 ''';
   }
 
+  // MODIFICATION: Use the base system message in the image understanding prompt.
   static String generateImageUnderstandingPrompt(String textQuery)
   {
-    return "Analyze the provided image and respond to the following question: \"$textQuery\"";
+    return "$_baseSystemMessage\n\nAnalyze the provided image and respond to the following question: \"$textQuery\"";
   }
-
-
 }

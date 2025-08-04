@@ -1,5 +1,7 @@
 import 'package:anticipatorygpt/camera_live/camera_bloc.dart';
 import 'package:anticipatorygpt/camera_live/camera_screen.dart';
+import 'package:anticipatorygpt/document_reader/document_reader_bloc.dart';
+import 'package:anticipatorygpt/document_reader/document_reader_screen.dart';
 import 'package:anticipatorygpt/model_download/downloadscreen.dart';
 import 'package:anticipatorygpt/quiz/quiz_model.dart';
 import 'package:anticipatorygpt/quiz/quiz_screen.dart';
@@ -9,6 +11,7 @@ import 'package:flutter_gemma/core/chat.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'chat/ChatScreen.dart';
 import 'chat/chat_bloc.dart';
+import 'guide/guide.dart';
 import 'home/home.dart';
 import 'model_download/model_repository.dart';
 import 'notFound.dart';
@@ -19,6 +22,8 @@ class AppRoutes {
   static const String chat = "/chat";
   static const String quiz="/quiz";
   static const String cameraLive="/cameraLive";
+  static const String documentReader="documentReader";
+  static const String guide = "/guide";
 }
 
 class AppRouter {
@@ -26,18 +31,24 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.home:
-        return MaterialPageRoute(builder: (_) => Home());
+        return MaterialPageRoute(builder: (_) => const Home());
 
       case AppRoutes.download:
-        return MaterialPageRoute(builder: (_) => DownloadScreen());
+        return MaterialPageRoute(builder: (_) => const DownloadScreen());
 
       case AppRoutes.chat:
+      // NEW: Extract the `useGpu` argument. Default to false if not provided.
+        final args = settings.arguments as Map<String, dynamic>?;
+        final bool useGpu = args?['useGpu'] as bool? ?? false;
+
         return MaterialPageRoute(builder: (_) =>
             BlocProvider(
+              // NEW: Pass the `useGpu` value to the ChatBloc constructor.
               create: (context) => ChatBloc(
                 RepositoryProvider.of<ModelRepository>(context),
+                useGpu: useGpu,
               ),
-              child: ChatScreen(),
+              child: const ChatScreen(),
             ));
 
       case AppRoutes.quiz:
@@ -66,17 +77,36 @@ class AppRouter {
         final InferenceChat chatInstance= args['chatInstance'] as InferenceChat;
 
         if(chatInstance==null)
-          {
-            return MaterialPageRoute(builder: (_)=>const Center(child: Text("Error: chat instance not available for camera AI"),));
+        {
+          return MaterialPageRoute(builder: (_)=>const Center(child: Text("Error: chat instance not available for camera AI"),));
 
-          }
+        }
         return MaterialPageRoute(builder: (_)=>BlocProvider(create:(context)=>CameraBloc(chat: chatInstance),
-        child: CameraScreen(chatInstance: chatInstance),));
+          child: CameraScreen(chatInstance: chatInstance),));
 
+
+      case AppRoutes.documentReader:
+        final args=settings.arguments as Map<String,dynamic>;
+        final InferenceChat chatInstance= args['chatInstance'] as InferenceChat;
+        final String languageCode= args['languageCode'] as String;
+
+        if(chatInstance==null)
+        {
+          return MaterialPageRoute(builder: (_)=>const Center(child:Text("Error:Chat instance not available for document") ,));
+        }
+
+        // return MaterialPageRoute(builder: (_)=>BlocProvider(create: (context)=>DocumentBloc(),
+        // child: DocumentReaderScreen()));
+
+        return MaterialPageRoute(builder: (_)=>BlocProvider(create: (context)=>DocumentReaderBloc(chat: chatInstance, languageCode: languageCode),
+            child: DocumentReaderScreen(chatInstance:chatInstance,languageCode:languageCode,)));
+
+      case AppRoutes.guide:
+        return MaterialPageRoute(builder: (_) => const GuideScreen());
 
       default:
       // Fallback for undefined routes
-        return MaterialPageRoute(builder: (_) => NotFound());
+        return MaterialPageRoute(builder: (_) => const NotFound());
     }
   }
 }

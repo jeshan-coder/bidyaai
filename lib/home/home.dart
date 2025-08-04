@@ -2,76 +2,142 @@ import 'package:anticipatorygpt/routers.dart';
 import 'package:anticipatorygpt/theme.dart';
 import 'package:flutter/material.dart';
 
-class Home extends StatelessWidget {
+// The Home widget is now a StatefulWidget to manage the toggle button state.
+class Home extends StatefulWidget {
   const Home({super.key});
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  // A state variable to track if the GPU should be used.
+  bool _useGpu = false;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      // CHANGE: Explicitly setting the background to white to match the design.
+      // MODIFICATION: Changed background color to match the original white theme.
       backgroundColor: Colors.white,
-      // Using SafeArea to avoid notches and system UI elements
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
-            // Using spaceBetween to push the button to the bottom
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // This flexible container allows the top content to take available space
               Flexible(
-                // CHANGE: Removed the centering alignment to push content to the top.
                 child: Column(
                   children: [
-                    // Added some space from the top of the screen.
                     const SizedBox(height: 40),
-                    // --- IMPORTANT ---
-                    // Make sure you add your image to 'assets/images/'
-                    // and declare it in your pubspec.yaml file.
                     Image.asset(
                       'assets/assist.png',
                       height: MediaQuery.of(context).size.height * 0.4,
                     ),
                     const SizedBox(height: 48),
+                    // MODIFICATION: Updated font size to match design.
                     Text(
                       "BidyaAI",
-                      style: textTheme.titleLarge?.copyWith(fontSize: 24),
+                      style: textTheme.titleLarge?.copyWith(fontSize: 28),
                     ),
                     const SizedBox(height: 16),
+                    // MODIFICATION: Updated font size and weight to match design.
                     Text(
                       "Education for unreachable",
                       style: textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                          ?.copyWith(fontWeight: FontWeight.w700, fontSize: 18),
                       textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    // MODIFICATION: Redesigned the toggle switch to match the image.
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Use GPU',
+                            style: textTheme.bodyLarge,
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _useGpu = !_useGpu;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: 50.0,
+                              height: 28.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20.0),
+                                color: _useGpu ? AppTheme.primaryColor : Colors.white,
+                                border: Border.all(
+                                  color: _useGpu ? AppTheme.primaryColor : Colors.grey.shade400,
+                                ),
+                              ),
+                              child: Align(
+                                alignment: _useGpu ? Alignment.centerRight : Alignment.centerLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Container(
+                                    width: 24.0,
+                                    height: 24.0,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-
-              // This is the bottom button
               Padding(
-                padding: const EdgeInsets.only(bottom: 32.0, top: 16.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    // This is the original navigation logic from your old button
-                    Navigator.of(context).pushNamed(AppRoutes.chat);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 56), // Full width
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
+                padding: const EdgeInsets.only(bottom: 12.0, top: 16.0),
+                child: Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pushNamed(AppRoutes.chat,
+                            arguments: {'useGpu': _useGpu});
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F1E3A),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 56),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                      ),
+                      child: Text(
+                        'Start Exploring',
+                        style: textTheme.bodyMedium
+                            ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'Start Exploring',
-                    style: textTheme.bodyMedium
-                        ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
+                    // MODIFICATION: Added a new "Guide" text button.
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pushNamed(AppRoutes.guide);
+                        // Functionality for the guide button would go here.
+                      },
+                      child: const Text(
+                        'Guide',
+                        style: TextStyle(
+                          color: Color(0xFF0F1E3A),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

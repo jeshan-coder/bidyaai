@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:anticipatorygpt/routers.dart'; // Import AppRoutes
-import 'package:anticipatorygpt/quiz/quiz_model.dart'; // Import Quiz model
+import 'package:anticipatorygpt/routers.dart';
+import 'package:anticipatorygpt/quiz/quiz_model.dart';
 import 'chat_bloc.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -153,7 +153,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   listener: (context, state) {
                     if (state is ChatLoading ||
                         state is ChatLoaded ||
-                        state is ChatQuizReady) {
+                        state is ChatQuizReady ||
+                        state is ChatReaderReady) {
                       _scrollToBottom();
                     }
                     if (state is ChatError) {
@@ -188,6 +189,42 @@ class _ChatScreenState extends State<ChatScreen> {
                         },
                         icon: const Icon(Icons.quiz_outlined),
                         label: const Text('Start Quiz!'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          textStyle: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    );
+                  }
+                  // FIX: New button for Document Reader
+                  if (state.readerReady) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pushNamed(
+                            AppRoutes.documentReader,
+                            arguments: {
+                              'chatInstance':
+                              context.read<ChatBloc>().chatInstance,
+                              'languageCode': state.languageCode,
+                            },
+                          );
+                          //     .then((_) {
+                          //   context.read<ChatBloc>().add(ClearReaderState());
+                          // }
+                          // );
+                        },
+                        icon: const Icon(Icons.picture_as_pdf),
+                        label: const Text('Open Reader'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.white,
@@ -246,34 +283,48 @@ class _ChatMessageBubble extends StatelessWidget {
 
   const _ChatMessageBubble({required this.message});
 
-  // CHANGE: New helper method to build the text with highlighting.
   List<TextSpan> _buildTextSpans(BuildContext context, String text, bool isUser) {
     final theme = Theme.of(context);
     final baseStyle = theme.textTheme.bodyLarge?.copyWith(
       color: isUser ? Colors.white : Colors.black87,
     );
 
-    if (isUser && text.startsWith('/quiz')) {
-      return [
-        TextSpan(
-          text: '/quiz',
-          style: baseStyle?.copyWith(
-            color: Colors.green.shade400,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        TextSpan(
-          text: text.substring(5), // The rest of the string
-          style: baseStyle,
-        ),
-      ];
+    if (isUser) {
+      if (text.toLowerCase().startsWith('/quiz')) {
+        final commandStyle = baseStyle?.copyWith(
+          color: Colors.green.shade400,
+          fontWeight: FontWeight.bold,
+        );
+        final topic = text.substring(5);
+        return [
+          TextSpan(text: '/quiz', style: commandStyle),
+          TextSpan(text: topic, style: baseStyle),
+        ];
+      } else if (text.toLowerCase().startsWith('/reader')) {
+        final commandStyle = baseStyle?.copyWith(
+          color: Colors.blue.shade400,
+          fontWeight: FontWeight.bold,
+        );
+        return [
+          TextSpan(text: '/reader', style: commandStyle),
+        ];
+      } else if (text.toLowerCase().startsWith('/aware') ||
+          text.toLowerCase().startsWith('/clear') ||
+          text.toLowerCase().startsWith('/language')) {
+        final commandStyle = baseStyle?.copyWith(
+          color: Colors.orange.shade400,
+          fontWeight: FontWeight.bold,
+        );
+        return [
+          TextSpan(text: text, style: commandStyle),
+        ];
+      }
     }
     return [TextSpan(text: text, style: baseStyle)];
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isUser = message.isFromUser;
 
     final aiAvatar = const CircleAvatar(
@@ -292,7 +343,7 @@ class _ChatMessageBubble extends StatelessWidget {
             EdgeInsets.only(left: isUser ? 0 : 52, right: isUser ? 52 : 0),
             child: Text(
               isUser ? "User" : "BidyaAI",
-              style: theme.textTheme.labelMedium
+              style: Theme.of(context).textTheme.labelMedium
                   ?.copyWith(color: Colors.grey.shade600),
             ),
           ),
@@ -314,7 +365,6 @@ class _ChatMessageBubble extends StatelessWidget {
                   isUser ? AppTheme.primaryColor : const Color(0xFFF1F2F6),
                   borderRadius: BorderRadius.circular(20.0),
                 ),
-                // CHANGE: Replaced Text with RichText to allow for styled text spans.
                 child: RichText(
                   text: TextSpan(
                     children: _buildTextSpans(context, message.text, isUser),

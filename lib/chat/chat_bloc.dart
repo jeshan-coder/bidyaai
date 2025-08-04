@@ -21,39 +21,13 @@ part 'chat_event.dart';
 part 'chat_state.dart';
 
 
-
-Future<bool> _initializeModelInIsolate(Map<String,dynamic> args)
-async{
-  final String modelPath=args['modelPath'];
-
-  final RootIsolateToken rootIsolateToken=args['rootIsolateToken'];
-
-  BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
-
-  final gemma=FlutterGemmaPlugin.instance;
-
-  try
-      {
-
-        await gemma.modelManager.setModelPath(modelPath);
-        final model= await gemma.createModel(modelType: ModelType.gemmaIt,
-        preferredBackend: PreferredBackend.gpu,supportImage: true);
-
-        model.close();
-        return true;
-      }
-      catch(e)
-  {
-    print("Isolate initialization failed: $e");
-    return false;
-  }
-
-}
-
+// MODIFICATION: Removed the separate `_initializeModelInIsolate` function and its logic.
+// This code is no longer needed as we are not using an isolate for initialization.
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ModelRepository _modelRepository;
   final FlutterGemmaPlugin _gemmaPlugin =FlutterGemmaPlugin.instance;
+  final PreferredBackend _preferredBackend;
 
   InferenceModel? _inferenceModel;
   InferenceChat? _chat;
@@ -67,15 +41,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   InferenceChat? get chatInstance =>_chat;
 
-  ChatBloc(this._modelRepository) : super(ChatInitial()) {
-    // on<ChatEvent>((event, emit) {
-    //   // TODO: implement event handler
-    // });
+  ChatBloc(this._modelRepository, {bool useGpu = false})
+      : _preferredBackend = useGpu ? PreferredBackend.gpu : PreferredBackend.cpu,
+        super(ChatInitial()) {
     on<InitializeChat>(_onInitializeChat);
     on<SendMessage>(_onSendMessage);
     on<ClearQuizState>(_onClearQuizState);
     on<ToggleContext>(_onToggleContext);
-    // _initialize();
+    on<ClearReaderState>(_onClearReaderState);
   }
 
   Future<void> _onInitializeChat(
@@ -84,134 +57,57 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       )async
   {
     if(state is !ChatModelLoading)
-      {
-        emit(ChatModelLoading());
-      }
+    {
+      emit(ChatModelLoading());
+    }
     try{
       final modelPath=await _modelRepository.getModelFilePath();
 
-      final rootIsolateToken =RootIsolateToken.instance;
-
-      if(rootIsolateToken==null)
-        {
-          throw Exception("Failed to get RootIsolateToken.");
-        }
-
-      print("Spawning Isolate for model initialization...");
-
-      final bool success= await Isolate.run(()=>_initializeModelInIsolate({'modelPath':modelPath,'rootIsolateToken':rootIsolateToken}));
+      // MODIFICATION: Performing model initialization directly without an isolate.
       await _gemmaPlugin.modelManager.setModelPath(modelPath);
-      if(!success)
-        {
-          throw Exception("Isolate failed to initialize the model");
-        }
-      const backend=PreferredBackend.gpu;
 
-      _inferenceModel=await _gemmaPlugin.createModel(modelType: ModelType.gemmaIt,preferredBackend: backend,supportImage: true);
+      _inferenceModel=await _gemmaPlugin.createModel(
+          modelType: ModelType.gemmaIt,
+          preferredBackend: _preferredBackend, // Using the saved backend preference
+          supportImage: true);
 
-      print("✅ AI Model Initialized successfully with Backend: ${backend.name}");
+      print("✅ AI Model Initialized successfully with Backend: ${_preferredBackend.name}");
 
       _chat=await _inferenceModel!.createChat(supportImage: true,
-      temperature: ModelSettings.defaultTemperature,
-      topK: ModelSettings.defaultTopK,
-      topP: ModelSettings.defaultTopP,
+        temperature: ModelSettings.defaultTemperature,
+        topK: ModelSettings.defaultTopK,
+        topP: ModelSettings.defaultTopP,
       );
 
       emit(ChatInitial());
     }
     catch(e)
     {
-        print("❌ Failed to initialize AI model: $e");
-        emit(ChatError(error:'Failed to initialize AI model: $e', messages: [], isContextAware:state.isContextAware, languageCode:state.languageCode));
+      print("❌ Failed to initialize AI model: $e");
+      emit(ChatError(error:'Failed to initialize AI model: $e', messages: [], isContextAware:state.isContextAware, languageCode:state.languageCode, readerReady: false));
     }
   }
 
-  // Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async
-  // {
-  //
-  //   if (_chat==null)
-  //     {
-  //       emit(ChatError(error: 'Chat session is not initialized.', messages: state.messages));
-  //       return;
-  //     }
-  //
-  //   final userMessage=ChatMessage(text: event.message,imageBytes: event.imageBytes,isFromUser: true);
-  //
-  //   final updatedMessages=List<ChatMessage>.from(state.messages)..add(userMessage);
-  //
-  //
-  //   final modelResponsePlaceholder=ChatMessage(text: '', isFromUser: false);
-  //
-  //   final messagesWithPlaceholder=List<ChatMessage>.from(updatedMessages)..add(modelResponsePlaceholder);
-  //
-  //
-  //   emit(ChatLoading(messages: messagesWithPlaceholder));
-  //
-  //   try{
-  //
-  //       final Message promptMessage;
-  //
-  //       if(event.imageBytes!=null)
-  //         {
-  //           promptMessage=Message.withImage(text: event.message, imageBytes:event.imageBytes!,isUser: true);
-  //         }
-  //       else
-  //         {
-  //           promptMessage=Message.text(text: event.message,isUser: true);
-  //         }
-  //
-  //
-  //     await _chat!.addQueryChunk(promptMessage);
-  //
-  //     final responseStream= _chat!.generateChatResponseAsync();
-  //
-  //     String fullResponse='';
-  //
-  //
-  //
-  //     await for(final responsePart in responseStream)
-  //       {
-  //         if(isClosed) return;
-  //         fullResponse+=responsePart;
-  //         final currentMessages=List<ChatMessage>.from(updatedMessages);
-  //         currentMessages.add(ChatMessage(text: fullResponse, isFromUser: false));
-  //         emit(ChatLoading(messages: currentMessages));
-  //       }
-  //
-  //     final finalMessages=List<ChatMessage>.from(updatedMessages)..add(ChatMessage(text: fullResponse, isFromUser: false));
-  //     emit(ChatLoaded(messages: finalMessages));
-  //
-  //   }
-  //   catch(e)
-  //   {
-  //     // if(!isClosed) {
-  //       emit(ChatError(error: 'Failed to get response from model: $e',
-  //           messages: updatedMessages));
-  //     // }
-  //       }
-  //
-  // }
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async
   {
     if (_chat==null)
     {
-      emit(ChatError(error: 'Chat session is not initialized.', messages: state.messages, isContextAware:state.isContextAware, languageCode:state.languageCode));
+      emit(ChatError(error: 'Chat session is not initialized.', messages: state.messages, isContextAware:state.isContextAware, languageCode:state.languageCode,readerReady: state.readerReady));
       return;
     }
 
     final userMessageText = event.message.trim();
     final userMessage=ChatMessage(text: userMessageText,imageBytes: event.imageBytes,isFromUser: true);
 
-    // Create a mutable list of messages from the current state
     final updatedMessages = List<ChatMessage>.from(state.messages);
-    updatedMessages.add(userMessage); // Add the user's message
+    updatedMessages.add(userMessage);
 
     if (userMessageText.toLowerCase() == '/aware') {
       _isContextAware = true;
       final confirmationMessage = ChatMessage(text: 'AI is now aware of chat history.', isFromUser: false);
       final finalMessages = List<ChatMessage>.from(updatedMessages)
         ..add(confirmationMessage);
-      emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode:state.languageCode));
+      emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode:state.languageCode, readerReady: false));
       return;
     } else if (userMessageText.toLowerCase() == '/clear') {
       _isContextAware = false;
@@ -219,27 +115,33 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final confirmationMessage = ChatMessage(text: 'Chat history has been cleared.', isFromUser: false);
       final finalMessages = List<ChatMessage>.from(updatedMessages)
         ..add(confirmationMessage);
-      emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode:state.languageCode));
+      emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode:state.languageCode, readerReady: false));
       return;
     }
     else if (userMessageText.toLowerCase().startsWith('/language')) {
       final language = userMessageText.substring('/language'.length).trim().toLowerCase();
-      // Remove the _languageMap and use a more flexible approach
       if (language.isNotEmpty) {
-        _currentLanguageCode = language; // Directly use the provided string as the code
+        _currentLanguageCode = language;
         await _chat!.clearHistory();
         final confirmationMessage = ChatMessage(text: 'AI will now respond in ${language}.', isFromUser: false);
         final finalMessages = List<ChatMessage>.from(updatedMessages)..add(confirmationMessage);
-        emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode: _currentLanguageCode));
-      } else {
+        emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode: _currentLanguageCode, readerReady: false));
+      }
+
+      else {
         final errorMessage = ChatMessage(text: 'Please specify a language after /language.', isFromUser: false);
         final finalMessages = List<ChatMessage>.from(updatedMessages)..add(errorMessage);
-        emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode: _currentLanguageCode));
+        emit(ChatLoaded(messages: finalMessages, isContextAware: _isContextAware, languageCode: _currentLanguageCode, readerReady: false));
       }
       return;
     }
+    else if (userMessageText.toLowerCase().startsWith('/reader')) {
+      final finalMessages = List<ChatMessage>.from(updatedMessages)
+        ..add(ChatMessage(text: 'Opening document reader...', isFromUser: false));
+      emit(ChatReaderReady(messages: finalMessages, isContextAware: state.isContextAware, languageCode: state.languageCode));
+      return;
+    }
 
-    // Check if the user is requesting a quiz
     final isQuizRequest = userMessageText.toLowerCase().startsWith('/quiz');
     String promptToModel;
     String loadingMessage;
@@ -250,14 +152,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       loadingMessage = 'Generating quiz on ${topic.isEmpty ? 'general knowledge' : topic}...';
     } else {
       promptToModel = PromptManager.generateChatPrompt(userMessageText);
-      loadingMessage = ''; // Standard chat loading message, will be replaced by full response
+      loadingMessage = '';
     }
 
-    // Add a placeholder message for AI response or quiz generation
     final modelResponsePlaceholder = ChatMessage(text: loadingMessage, isFromUser: false);
-    updatedMessages.add(modelResponsePlaceholder); // Add the placeholder to the mutable list
+    updatedMessages.add(modelResponsePlaceholder);
 
-    emit(ChatLoading(messages: updatedMessages, languageCode:state.languageCode, isContextAware:state.isContextAware)); // Emit loading state with placeholder
+    emit(ChatLoading(messages: updatedMessages, languageCode:state.languageCode, isContextAware:state.isContextAware, readerReady: state.readerReady));
 
     try{
       final Message promptMessage;
@@ -283,99 +184,76 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         if(isClosed) return;
         fullResponse+=responsePart;
 
-        // ONLY for non-quiz requests, update the placeholder with streaming response
         if (!isQuizRequest) {
           final currentMessages = List<ChatMessage>.from(updatedMessages);
-          // Replace the last message (placeholder) with the current streaming response
           currentMessages[currentMessages.length - 1] = ChatMessage(text: fullResponse, isFromUser: false);
-          emit(ChatLoading(messages: currentMessages, languageCode:state.languageCode, isContextAware:state.isContextAware));
+          emit(ChatLoading(messages: currentMessages, languageCode:state.languageCode, isContextAware:state.isContextAware, readerReady: state.readerReady));
         }
       }
 
-      // After streaming is complete, prepare the final messages
       final List<ChatMessage> finalMessages = List<ChatMessage>.from(updatedMessages);
-      // Remove the placeholder message before adding the final response or quiz ready message
       finalMessages.removeLast();
 
 
       if (isQuizRequest) {
         String cleanedJsonResponse = fullResponse;
-        // Robust JSON extraction: Find the first '[' and last ']'
         final int startIndex = fullResponse.indexOf('[');
         final int endIndex = fullResponse.lastIndexOf(']');
 
         if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
           cleanedJsonResponse = fullResponse.substring(startIndex, endIndex + 1);
         } else {
-          // If '[' and ']' not found, or invalid range, log and try to parse full response
           print("Warning: Could not find valid JSON array delimiters. Attempting to parse full response.");
         }
 
 
         try {
-          // Attempt to parse the cleaned response as JSON for the quiz
           final List<dynamic> jsonList = jsonDecode(cleanedJsonResponse);
           final Quiz generatedQuiz = Quiz.fromJson(jsonList);
 
-          // Add a clean, concise message for quiz readiness
           finalMessages.add(ChatMessage(text: 'Your quiz is ready! Tap "Start Quiz!" below.', isFromUser: false));
-          emit(ChatQuizReady(messages: finalMessages, generatedQuiz: generatedQuiz,isContextAware: state.isContextAware, languageCode:state.languageCode));
+          emit(ChatQuizReady(messages: finalMessages, generatedQuiz: generatedQuiz,isContextAware: state.isContextAware, languageCode:state.languageCode, readerReady: false));
 
         } catch (e) {
           print("Failed to parse quiz JSON: $e");
-          // If JSON parsing fails, treat it as a regular text response with an error
           finalMessages.add(ChatMessage(text: 'Failed to generate quiz. Please try again or rephrase your request. Error: $e', isFromUser: false));
-          emit(ChatLoaded(messages: finalMessages,isContextAware: state.isContextAware, languageCode:state.languageCode));
+          emit(ChatLoaded(messages: finalMessages,isContextAware: state.isContextAware, languageCode:state.languageCode, readerReady: false));
         }
       } else {
-        // For regular chat, add the full response
         finalMessages.add(ChatMessage(text: fullResponse, isFromUser: false));
-        emit(ChatLoaded(messages: finalMessages,isContextAware: state.isContextAware, languageCode:state.languageCode));
+        emit(ChatLoaded(messages: finalMessages,isContextAware: state.isContextAware, languageCode:state.languageCode, readerReady: false));
       }
 
     }
     catch(e)
     {
-      // If an error occurs during generation, replace the placeholder with an error message
       final List<ChatMessage> errorMessages = List<ChatMessage>.from(updatedMessages);
-      errorMessages.removeLast(); // Remove placeholder
+      errorMessages.removeLast();
       errorMessages.add(ChatMessage(text: 'Failed to get response from model: $e', isFromUser: false));
-      emit(ChatError(error: 'Failed to get response from model: $e', messages: errorMessages, isContextAware:state.isContextAware, languageCode: ''));
+      emit(ChatError(error: 'Failed to get response from model: $e', messages: errorMessages, isContextAware:state.isContextAware, languageCode: '', readerReady:state.readerReady));
     }
   }
 
   void _onClearQuizState(ClearQuizState event, Emitter<ChatState> emit) async{
-    // Emit a ChatLoaded state, preserving messages but clearing quiz flags
-
     await _chat?.clearHistory();
-    // _inferenceModel?.createChat(
-    //   supportImage: true,
-    //   temperature: ModelSettings.defaultTemperature,
-    //   topK: ModelSettings.defaultTopK,
-    //   topP: ModelSettings.defaultTopP
-    // ).then((newChat){
-    //   _chat=newChat;
-      emit(ChatLoaded(messages: state.messages, quizReady: false, generatedQuiz: null,isContextAware: _isContextAware, languageCode:state.languageCode));
-    // }).catchError((error){
-    //   print("Error re-creating main chat session: $error");
-    //
-    //   emit(ChatError(error: 'Failed to reset chat session: $error', messages:state.messages,quizReady: false,generatedQuiz: null));
-    // });
-
-
+    emit(ChatLoaded(messages: state.messages, quizReady: false, generatedQuiz: null,isContextAware: _isContextAware, languageCode:state.languageCode, readerReady: false));
   }
 
   // New handler for ToggleContext event
   void _onToggleContext(ToggleContext event, Emitter<ChatState> emit) {
     _isContextAware = !_isContextAware;
-    // Emit a ChatLoaded state that reflects the new context mode.
-    // The UI can react to this if needed, but it's primarily for internal BLoC logic.
-    emit(ChatLoaded(messages: state.messages, isContextAware: _isContextAware, languageCode:state.languageCode));
+    emit(ChatLoaded(messages: state.messages, isContextAware: _isContextAware, languageCode:state.languageCode, readerReady: false));
+  }
+  void _onClearReaderState(ClearReaderState event, Emitter<ChatState> emit) async {
+    if (!state.isContextAware) {
+      await _chat?.clearHistory();
+    }
+
+    emit(ChatLoaded(messages: state.messages, quizReady: false, generatedQuiz: null, isContextAware: state.isContextAware, languageCode: state.languageCode, readerReady: false));
   }
 
   @override
   Future<void> close() {
-    // _chatPlugin.dispose();
     _inferenceModel?.close();
     return super.close();
   }
