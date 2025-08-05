@@ -12,7 +12,6 @@ The overall system architecture for **Bidya AI Education** is depicted in the `s
 
 ![System Architecture](system_architecture.png)
 
-*(Note: The `system_architecture.png` file should be placed in the root directory alongside this README.)*
 
 ## Flutter Application Structure
 
@@ -59,7 +58,7 @@ lib/
 ├── notFound.dart                 # Handles routes that are not found
 ├── routers.dart                  # Defines application routing
 └── theme.dart                    # Defines the application's visual theme
-
+```
 
 ## Finetuning and Data Preparation Files
 
