@@ -6,6 +6,12 @@
 
 This project combines a robust Flutter mobile application with sophisticated machine learning pipelines for data preparation, model finetuning, and evaluation, ensuring a seamless and intelligent tutoring system. The goal is to provide tailored education to students, regardless of their geographic location or connectivity limitations.
 
+## APK Download
+
+You can download the APK for **Bidya AI Education for Unreachable** from the following link:
+
+[Download APK](https://drive.google.com/file/d/1rIDyCr9DXyt__-CzF05L5qmpEArc4obD/view?usp=sharing)
+
 ## System Architecture
 
 The overall system architecture for **Bidya AI Education** is depicted in the `system_architecture.png` file located in the root directory of this project. This diagram illustrates the flow of data and interactions between the mobile application, backend services, and machine learning components.
