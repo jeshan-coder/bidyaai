@@ -3,10 +3,8 @@ import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
-
 @immutable
-sealed class CameraEvent extends Equatable
-{
+sealed class CameraEvent extends Equatable {
   const CameraEvent();
 
   @override
@@ -14,20 +12,20 @@ sealed class CameraEvent extends Equatable
   List<Object?> get props => [];
 }
 
-class InitializeCamera extends CameraEvent
-{}
+class InitializeCamera extends CameraEvent {}
 
-
-class CaptureAndSendMessage extends CameraEvent
-{
+class CaptureAndSendMessage extends CameraEvent {
   final String message;
   final Uint8List imageBytes;
 
-  const CaptureAndSendMessage({required this.message,required this.imageBytes});
+  const CaptureAndSendMessage({
+    required this.message,
+    required this.imageBytes,
+  });
 
   @override
   // TODO: implement props
-  List<Object?> get props => [message,imageBytes];
+  List<Object?> get props => [message, imageBytes];
 }
 
-class ClearResponse extends CameraEvent{}
+class ClearResponse extends CameraEvent {}

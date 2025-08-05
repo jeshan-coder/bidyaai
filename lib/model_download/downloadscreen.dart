@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bidyaai/theme.dart'; // IMPORT ADDED
 
+/*
+Displays progress of downloading model from hugging face.
+redirected to this page automatically if model is not present.
+ */
 class DownloadScreen extends StatelessWidget {
   const DownloadScreen({super.key});
 
@@ -21,10 +25,7 @@ class DownloadScreen extends StatelessWidget {
             }
           },
         ),
-        title: Text(
-          "BidyaAI",
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        title: Text("BidyaAI", style: Theme.of(context).textTheme.titleLarge),
         centerTitle: true,
       ),
       // The BLoC logic is now restored.
@@ -156,10 +157,7 @@ class DownloadErrorWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            'Download Failed',
-            style: textTheme.headlineSmall,
-          ),
+          Text('Download Failed', style: textTheme.headlineSmall),
           const SizedBox(height: 16),
           Text(
             "There was a problem downloading the content. Please check your internet connection and try again.",

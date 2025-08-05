@@ -21,8 +21,7 @@ part 'chat_event.dart';
 part 'chat_state.dart';
 
 
-// MODIFICATION: Removed the separate `_initializeModelInIsolate` function and its logic.
-// This code is no longer needed as we are not using an isolate for initialization.
+
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ModelRepository _modelRepository;
@@ -63,7 +62,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try{
       final modelPath=await _modelRepository.getModelFilePath();
 
-      // MODIFICATION: Performing model initialization directly without an isolate.
+
       await _gemmaPlugin.modelManager.setModelPath(modelPath);
 
       _inferenceModel=await _gemmaPlugin.createModel(

@@ -49,7 +49,7 @@ class DocumentLoaded extends DocumentState {
   List<Object?> get props => [pdfBytes, pageCount, currentPage];
 }
 
-// NEW STATE: PDF is loaded and AI has responded.
+// PDF is loaded and AI has responded.
 class DocumentLoadedWithResponse extends DocumentState {
   final Uint8List pdfBytes;
   final int pageCount;

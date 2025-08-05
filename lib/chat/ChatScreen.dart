@@ -8,6 +8,15 @@ import 'package:bidyaai/routers.dart';
 import 'package:bidyaai/quiz/quiz_model.dart';
 import 'chat_bloc.dart';
 
+/*
+Chat Screen . main screen of our app. responsible for displaying messages and input field. navigating to other screen . handling commands etc
+_pickImage : responsible for picking image from device.
+_sendMessage : responsible for sending message to AI.
+_scrollToBottom : responsible for scrolling to bottom of the screen.
+
+
+ */
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -218,10 +227,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               'languageCode': state.languageCode,
                             },
                           );
-                          //     .then((_) {
-                          //   context.read<ChatBloc>().add(ClearReaderState());
-                          // }
-                          // );
+
                         },
                         icon: const Icon(Icons.picture_as_pdf),
                         label: const Text('Open Reader'),

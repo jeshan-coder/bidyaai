@@ -9,15 +9,25 @@ import 'package:bidyaai/management/prompt_management.dart';
 import 'document_reader_event.dart';
 import 'document_reader_state.dart';
 
+/*
+_onSelectDocument : responsible for picking pdf file from device.
+_onDocumentPageLoaded : called when page is loaded.
+_onDocumentPageChanged : called when page is changed.
+_onError : called when error occurs.
+_onProcessDocument : called when document is processed.
+_onClearResponse : called when AI response is cleared.
+ */
 
 class DocumentReaderBloc extends Bloc<DocumentEvent, DocumentState> {
   final InferenceChat _chat;
   final String _languageCode;
 
-  DocumentReaderBloc({required InferenceChat chat, required String languageCode})
-      : _chat = chat,
-        _languageCode = languageCode,
-        super(DocumentInitial()) {
+  DocumentReaderBloc({
+    required InferenceChat chat,
+    required String languageCode,
+  }) : _chat = chat,
+       _languageCode = languageCode,
+       super(DocumentInitial()) {
     on<SelectDocument>(_onSelectDocument);
     on<DocumentPageLoaded>(_onDocumentPageLoaded);
     on<DocumentPageChanged>(_onDocumentPageChanged);
@@ -27,7 +37,9 @@ class DocumentReaderBloc extends Bloc<DocumentEvent, DocumentState> {
   }
 
   Future<void> _onSelectDocument(
-      SelectDocument event, Emitter<DocumentState> emit) async {
+    SelectDocument event,
+    Emitter<DocumentState> emit,
+  ) async {
     emit(DocumentLoading());
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -42,51 +54,59 @@ class DocumentReaderBloc extends Bloc<DocumentEvent, DocumentState> {
       }
 
       final Uint8List bytes = result.files.single.bytes!;
-      emit(DocumentLoaded(
-        pdfBytes: bytes,
-        pageCount: 0,
-        currentPage: 0,
-      ));
+      emit(DocumentLoaded(pdfBytes: bytes, pageCount: 0, currentPage: 0));
     } catch (e) {
       emit(DocumentError('Failed to pick PDF: $e'));
     }
   }
 
   void _onDocumentPageLoaded(
-      DocumentPageLoaded event, Emitter<DocumentState> emit) {
+    DocumentPageLoaded event,
+    Emitter<DocumentState> emit,
+  ) {
     final s = state;
     if (s is DocumentLoaded) {
-      emit(DocumentLoaded(
-        pdfBytes: s.pdfBytes,
-        pageCount: event.pageCount,
-        currentPage: 1,
-      ));
+      emit(
+        DocumentLoaded(
+          pdfBytes: s.pdfBytes,
+          pageCount: event.pageCount,
+          currentPage: 1,
+        ),
+      );
     } else if (s is DocumentLoadedWithResponse) {
-      emit(DocumentLoadedWithResponse(
-        pdfBytes: s.pdfBytes,
-        pageCount: event.pageCount,
-        currentPage: 1,
-        aiResponse: s.aiResponse,
-      ));
+      emit(
+        DocumentLoadedWithResponse(
+          pdfBytes: s.pdfBytes,
+          pageCount: event.pageCount,
+          currentPage: 1,
+          aiResponse: s.aiResponse,
+        ),
+      );
     }
   }
 
   void _onDocumentPageChanged(
-      DocumentPageChanged event, Emitter<DocumentState> emit) {
+    DocumentPageChanged event,
+    Emitter<DocumentState> emit,
+  ) {
     final s = state;
     if (s is DocumentLoaded) {
-      emit(DocumentLoaded(
-        pdfBytes: s.pdfBytes,
-        pageCount: s.pageCount,
-        currentPage: event.pageNumber,
-      ));
+      emit(
+        DocumentLoaded(
+          pdfBytes: s.pdfBytes,
+          pageCount: s.pageCount,
+          currentPage: event.pageNumber,
+        ),
+      );
     } else if (s is DocumentLoadedWithResponse) {
-      emit(DocumentLoadedWithResponse(
-        pdfBytes: s.pdfBytes,
-        pageCount: s.pageCount,
-        currentPage: event.pageNumber,
-        aiResponse: s.aiResponse,
-      ));
+      emit(
+        DocumentLoadedWithResponse(
+          pdfBytes: s.pdfBytes,
+          pageCount: s.pageCount,
+          currentPage: event.pageNumber,
+          aiResponse: s.aiResponse,
+        ),
+      );
     }
   }
 
@@ -96,7 +116,9 @@ class DocumentReaderBloc extends Bloc<DocumentEvent, DocumentState> {
 
   // NEW EVENT HANDLER: Processes the document and sends to AI
   Future<void> _onProcessDocument(
-      ProcessDocument event, Emitter<DocumentState> emit) async {
+    ProcessDocument event,
+    Emitter<DocumentState> emit,
+  ) async {
     if (_chat == null) {
       emit(DocumentError('AI chat session is not initialized.'));
       return;
@@ -122,40 +144,50 @@ class DocumentReaderBloc extends Bloc<DocumentEvent, DocumentState> {
     }
 
     try {
-      emit(DocumentAnalyzing(
-        pdfBytes: pdfBytes,
-        pageCount: pageCount,
-        currentPage: currentPage,
-      ));
+      emit(
+        DocumentAnalyzing(
+          pdfBytes: pdfBytes,
+          pageCount: pageCount,
+          currentPage: currentPage,
+        ),
+      );
 
       await _chat.clearHistory();
 
-      final prompt = PromptManager.generateImageUnderstandingPrompt(event.message);
+      final prompt = PromptManager.generateImageUnderstandingPrompt(
+        event.message,
+      );
 
-      await _chat.addQueryChunk(Message.withImage(
-        text: prompt,
-        imageBytes: event.imageBytes,
-        isUser: true,
-      ));
+      await _chat.addQueryChunk(
+        Message.withImage(
+          text: prompt,
+          imageBytes: event.imageBytes,
+          isUser: true,
+        ),
+      );
 
       String fullResponse = '';
       final responseStream = _chat.generateChatResponseAsync();
       await for (final responsePart in responseStream) {
         fullResponse += responsePart;
-        emit(DocumentAnalyzing(
+        emit(
+          DocumentAnalyzing(
+            pdfBytes: pdfBytes,
+            pageCount: pageCount,
+            currentPage: currentPage,
+            currentResponse: fullResponse,
+          ),
+        );
+      }
+
+      emit(
+        DocumentLoadedWithResponse(
           pdfBytes: pdfBytes,
           pageCount: pageCount,
           currentPage: currentPage,
-          currentResponse: fullResponse,
-        ));
-      }
-
-      emit(DocumentLoadedWithResponse(
-        pdfBytes: pdfBytes,
-        pageCount: pageCount,
-        currentPage: currentPage,
-        aiResponse: fullResponse,
-      ));
+          aiResponse: fullResponse,
+        ),
+      );
 
       print("DocumentReaderBloc: AI analysis complete.");
     } catch (e) {
@@ -164,16 +196,17 @@ class DocumentReaderBloc extends Bloc<DocumentEvent, DocumentState> {
     }
   }
 
-  // NEW EVENT HANDLER: Clears the AI response from the state.
   void _onClearResponse(ClearResponse event, Emitter<DocumentState> emit) {
     if (state is DocumentLoadedWithResponse) {
       final s = state as DocumentLoadedWithResponse;
       // Revert to a normal DocumentLoaded state with the same PDF data.
-      emit(DocumentLoaded(
-        pdfBytes: s.pdfBytes,
-        pageCount: s.pageCount,
-        currentPage: s.currentPage,
-      ));
+      emit(
+        DocumentLoaded(
+          pdfBytes: s.pdfBytes,
+          pageCount: s.pageCount,
+          currentPage: s.currentPage,
+        ),
+      );
     }
   }
 

@@ -1,18 +1,27 @@
 import '../quiz/quiz_model.dart';
 
-class PromptManager
-{
-  // MODIFICATION: Define a base system message for the BidyaAI persona.
+/*
+This contains functions helpfull for managing prompts.
+
+for different use cases prompt are different .
+
+generateChatPrompt: responsible to generate quiz on that topic .
+generateExplanationPrompt: responsible for providing explanation to quiz .
+generateImageUnderstandingPrompt: responsible for understanding image and text
+
+
+ */
+
+class PromptManager {
+  // system message for the BidyaAI persona.
   static const String _baseSystemMessage =
       "You are BidyaAI, an educational assistant for primary school students in grades 1 through 10. Your purpose is to provide concise, direct, and helpful educational responses. You must act as a friendly and knowledgeable tutor. Respond in the specified language only. Do not provide any translations, extra comments, or information in other languages. Your responses should be easy for a child to understand. If a user asks about a topic outside of primary school education (grades 1-10), you must respond with 'I cannot help with that as my focus is on primary school education.'.";
 
-  // MODIFICATION: Use the base system message in the general chat prompt.
-  static String generateChatPrompt(String userMessage)
-  {
+  // for general chat
+  static String generateChatPrompt(String userMessage) {
     return "$_baseSystemMessage\n\nAnswer the following question directly: \n\n$userMessage";
   }
 
-  // MODIFICATION: Use the base system message in the quiz request prompt.
   static String generateQuizRequestPrompt(String topic) {
     return '''
       $_baseSystemMessage
@@ -50,10 +59,13 @@ class PromptManager
       ''';
   }
 
-  // MODIFICATION: Use the base system message in the explanation prompt.
-  static String generateExplanationPrompt(String question, List<Option> options, int selectedOptionIndex)
-  {
-    final selectedOptionText= options[selectedOptionIndex].text;
+  // generating quiz explanation
+  static String generateExplanationPrompt(
+    String question,
+    List<Option> options,
+    int selectedOptionIndex,
+  ) {
+    final selectedOptionText = options[selectedOptionIndex].text;
 
     return '''
     $_baseSystemMessage
@@ -70,9 +82,8 @@ Explain this concisely and to the point.
 ''';
   }
 
-  // MODIFICATION: Use the base system message in the image understanding prompt.
-  static String generateImageUnderstandingPrompt(String textQuery)
-  {
+  // handling image and text
+  static String generateImageUnderstandingPrompt(String textQuery) {
     return "$_baseSystemMessage\n\nAnalyze the provided image and respond to the following question: \"$textQuery\"";
   }
 }

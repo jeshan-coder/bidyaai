@@ -2,6 +2,33 @@ import 'package:bidyaai/routers.dart';
 import 'package:bidyaai/theme.dart';
 import 'package:flutter/material.dart';
 
+/*
+
+  Purpose:
+  This file defines the main home screen of the BidyaAI application.
+  It serves as the entry point for users after the initial setup (like model download).
+  From this screen, users can navigate to the chat interface or a guide screen.
+
+  Key Components:
+  - `Home` (StatefulWidget): The primary widget for the home screen UI.
+  - `_HomeState`: Manages the state for the `Home` widget, specifically the
+    toggle for GPU usage.
+
+  Functionality:
+  - Displays the application logo and introductory text.
+  - Provides a toggle switch to enable or disable GPU acceleration for the
+    AI model interactions.
+  - Contains buttons to:
+    - Navigate to the chat screen (`AppRoutes.chat`), passing the GPU preference.
+    - Navigate to a guide screen (`AppRoutes.guide`).
+
+  Usage:
+  This screen is typically pushed onto the navigation stack after any initial
+  loading or setup screens (e.g., `DownloadScreen`).
+  It expects the necessary routes (`AppRoutes.chat`, `AppRoutes.guide`) to be
+  defined in the application's router.
+*/
+
 // The Home widget is now a StatefulWidget to manage the toggle button state.
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -19,7 +46,6 @@ class _HomeState extends State<Home> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      // MODIFICATION: Changed background color to match the original white theme.
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
@@ -37,30 +63,29 @@ class _HomeState extends State<Home> {
                       height: MediaQuery.of(context).size.height * 0.4,
                     ),
                     const SizedBox(height: 48),
-                    // MODIFICATION: Updated font size to match design.
+
                     Text(
                       "BidyaAI",
                       style: textTheme.titleLarge?.copyWith(fontSize: 28),
                     ),
                     const SizedBox(height: 16),
-                    // MODIFICATION: Updated font size and weight to match design.
+
                     Text(
                       "Education for unreachable",
-                      style: textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w700, fontSize: 18),
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    // MODIFICATION: Redesigned the toggle switch to match the image.
+
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Use GPU',
-                            style: textTheme.bodyLarge,
-                          ),
+                          Text('Use GPU', style: textTheme.bodyLarge),
                           GestureDetector(
                             onTap: () {
                               setState(() {
@@ -73,13 +98,19 @@ class _HomeState extends State<Home> {
                               height: 28.0,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20.0),
-                                color: _useGpu ? AppTheme.primaryColor : Colors.white,
+                                color: _useGpu
+                                    ? AppTheme.primaryColor
+                                    : Colors.white,
                                 border: Border.all(
-                                  color: _useGpu ? AppTheme.primaryColor : Colors.grey.shade400,
+                                  color: _useGpu
+                                      ? AppTheme.primaryColor
+                                      : Colors.grey.shade400,
                                 ),
                               ),
                               child: Align(
-                                alignment: _useGpu ? Alignment.centerRight : Alignment.centerLeft,
+                                alignment: _useGpu
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
                                 child: Padding(
                                   padding: const EdgeInsets.all(2.0),
                                   child: Container(
@@ -106,8 +137,10 @@ class _HomeState extends State<Home> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed(AppRoutes.chat,
-                            arguments: {'useGpu': _useGpu});
+                        Navigator.of(context).pushNamed(
+                          AppRoutes.chat,
+                          arguments: {'useGpu': _useGpu},
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0F1E3A),
@@ -119,15 +152,16 @@ class _HomeState extends State<Home> {
                       ),
                       child: Text(
                         'Start Exploring',
-                        style: textTheme.bodyMedium
-                            ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    // MODIFICATION: Added a new "Guide" text button.
+
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pushNamed(AppRoutes.guide);
-                        // Functionality for the guide button would go here.
                       },
                       child: const Text(
                         'Guide',

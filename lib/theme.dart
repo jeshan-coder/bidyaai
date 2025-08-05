@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-// --- FONT SETUP COMPLETE ---
-// Your pubspec.yaml is now configured, so this theme will correctly
-// use the different weights of the Lexend font family.
-// Remember to STOP and RESTART your app for the changes to take effect.
+/*
+this is the theme file for the app.
+ */
 
 class AppTheme {
   // This is the custom MaterialColor that we created.
@@ -31,7 +30,6 @@ class AppTheme {
     primarySwatch: primaryColor,
     fontFamily: 'Lexend',
     useMaterial3: true,
-    // This merges our custom styles with Flutter's defaults for better consistency.
     textTheme: ThemeData.light().textTheme.copyWith(
       // For "Download Bidya AI"
       headlineSmall: const TextStyle(
@@ -73,7 +71,7 @@ class AppTheme {
         height: 1.5,
         color: Color(0xFF556F91), // Specific color for nav items
       ),
-    ).apply( // This applies the default text color to all styles.
+    ).apply(
       bodyColor: _textColor,
       displayColor: _textColor,
     ),

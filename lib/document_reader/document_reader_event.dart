@@ -40,7 +40,7 @@ class DocumentErrorEvent extends DocumentEvent {
   List<Object?> get props => [message];
 }
 
-// NEW EVENT: A user sends a message with a screenshot to the AI.
+// A user sends a message with a screenshot to the AI.
 class ProcessDocument extends DocumentEvent {
   final String message;
   final Uint8List imageBytes;
@@ -50,5 +50,5 @@ class ProcessDocument extends DocumentEvent {
   List<Object?> get props => [message, imageBytes];
 }
 
-// NEW EVENT: A user clears the AI response from the screen.
+// A user clears the AI response from the screen.
 class ClearResponse extends DocumentEvent {}

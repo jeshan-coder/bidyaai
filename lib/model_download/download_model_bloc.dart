@@ -6,6 +6,14 @@ import 'model_repository.dart';
 
 part 'download_model_event.dart';
 part 'download_model_state.dart';
+/*
+contains logic related to checking and downloading model from hugging face.
+
+_onCheckModelExists: checks if model exists in local storage.
+
+_onStartDownload: starts downloading model from hugging face.
+
+ */
 
 class DownloadModelBloc extends Bloc<DownloadModelEvent, DownloadModelState> {
   final ModelRepository _modelRepository;
@@ -15,12 +23,15 @@ class DownloadModelBloc extends Bloc<DownloadModelEvent, DownloadModelState> {
     // TODO: implement event handler
     // });
     on<CheckModelExists>(_onCheckModelExists);
+
     on<StartDownload>(_onStartDownload);
+
     on<DownloadProgressChanged>((event, emit) {
       emit(DownloadInprogress(event.progress));
     });
   }
 
+  // check if model exists or not in local storage
   Future<void> _onCheckModelExists(
     CheckModelExists event,
     Emitter<DownloadModelState> emit,
@@ -41,6 +52,7 @@ class DownloadModelBloc extends Bloc<DownloadModelEvent, DownloadModelState> {
     }
   }
 
+  // download model from hugging face and save in local storage
   Future<void> _onStartDownload(
     StartDownload event,
     Emitter<DownloadModelState> emit,

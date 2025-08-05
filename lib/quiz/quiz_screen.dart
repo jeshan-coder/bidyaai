@@ -33,7 +33,9 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => QuizBloc(chat: widget.chatInstance, languageCode: widget.languageCode)..add(InitializeQuiz(quiz: widget.quiz)),
+      create: (context) =>
+          QuizBloc(chat: widget.chatInstance, languageCode: widget.languageCode)
+            ..add(InitializeQuiz(quiz: widget.quiz)),
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
         appBar: AppBar(
@@ -45,10 +47,9 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           title: Text(
             'Quizzes',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(color: AppTheme.primaryColor),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: AppTheme.primaryColor),
           ),
           centerTitle: true,
         ),
@@ -66,17 +67,24 @@ class _QuizScreenState extends State<QuizScreen> {
           builder: (context, state) {
             if (state is QuizInitial) {
               return const Center(
-                  child: CircularProgressIndicator(
-                      valueColor:
-                      AlwaysStoppedAnimation<Color>(AppTheme.primaryColor)));
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryColor,
+                  ),
+                ),
+              );
             }
 
             final currentQuiz = state.quiz!;
             final userAnswers = state.userAnswers;
 
-            final isExplanationLoading = state is QuizLoadingExplanation && state.questionIndexLoading == _currentQuestionIndex;
+            final isExplanationLoading =
+                state is QuizLoadingExplanation &&
+                state.questionIndexLoading == _currentQuestionIndex;
             final explanation = state.explanations[_currentQuestionIndex];
-            final streamingText = isExplanationLoading ? state.streamingExplanationFragment : null;
+            final streamingText = isExplanationLoading
+                ? state.streamingExplanationFragment
+                : null;
 
             return SingleChildScrollView(
               child: Padding(
@@ -92,8 +100,11 @@ class _QuizScreenState extends State<QuizScreen> {
                       questionIndex: _currentQuestionIndex,
                       question: currentQuiz.questions[_currentQuestionIndex],
                       selectedAnswer: userAnswers[_currentQuestionIndex],
-                      explanation: streamingText ?? explanation, // FIX: Pass the combined explanation
-                      isExplanationLoading: isExplanationLoading, // FIX: Pass loading state
+                      explanation:
+                          streamingText ??
+                          explanation, // FIX: Pass the combined explanation
+                      isExplanationLoading:
+                          isExplanationLoading, // FIX: Pass loading state
                       onOptionSelected: (optionIndex) {
                         context.read<QuizBloc>().add(
                           SubmitAnswer(
@@ -110,14 +121,16 @@ class _QuizScreenState extends State<QuizScreen> {
                                 .questions[_currentQuestionIndex]
                                 .questionText,
                             options: currentQuiz
-                                .questions[_currentQuestionIndex].options,
+                                .questions[_currentQuestionIndex]
+                                .options,
                             selectedOptionIndex:
-                            userAnswers[_currentQuestionIndex]!,
+                                userAnswers[_currentQuestionIndex]!,
                           ),
                         );
                       },
                       onNextQuestion: () {
-                        if (_currentQuestionIndex < currentQuiz.questions.length - 1) {
+                        if (_currentQuestionIndex <
+                            currentQuiz.questions.length - 1) {
                           setState(() {
                             _currentQuestionIndex++;
                           });
@@ -154,17 +167,17 @@ class _QuizProgressIndicator extends StatelessWidget {
       children: [
         Text(
           'Question $currentQuestion/$totalQuestions',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         LinearProgressIndicator(
           value: progress,
           backgroundColor: Colors.grey[300],
-          valueColor:
-          const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+          valueColor: const AlwaysStoppedAnimation<Color>(
+            AppTheme.primaryColor,
+          ),
           minHeight: 6,
           borderRadius: BorderRadius.circular(3),
         ),
@@ -178,7 +191,8 @@ class QuizQuestionCard extends StatelessWidget {
   final Question question;
   final int? selectedAnswer;
   final String? explanation; // FIX: Added explanation and loading state fields
-  final bool isExplanationLoading; // FIX: Added explanation and loading state fields
+  final bool
+  isExplanationLoading; // FIX: Added explanation and loading state fields
   final ValueChanged<int> onOptionSelected;
   final VoidCallback onRequestExplanation;
   final VoidCallback onNextQuestion;
@@ -206,7 +220,9 @@ class QuizQuestionCard extends StatelessWidget {
       children: [
         Text(
           question.questionText,
-          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 24),
         ...question.options.asMap().entries.map((entry) {
@@ -228,8 +244,10 @@ class QuizQuestionCard extends StatelessWidget {
         if (hasAnswered)
           _ExplanationAndNextButton(
             questionIndex: questionIndex,
-            explanation: explanation, // FIX: Pass explanation to _ExplanationAndNextButton
-            isExplanationLoading: isExplanationLoading, // FIX: Pass loading state
+            explanation:
+                explanation, // FIX: Pass explanation to _ExplanationAndNextButton
+            isExplanationLoading:
+                isExplanationLoading, // FIX: Pass loading state
             onRequestExplanation: onRequestExplanation,
             onNextQuestion: onNextQuestion,
           ),
@@ -315,22 +333,24 @@ class _ExplanationAndNextButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool isExplanationComplete = explanation != null && explanation!.isNotEmpty && !isExplanationLoading;
-    final bool isLastQuestion = questionIndex == context.read<QuizBloc>().state.quiz!.questions.length - 1;
+    final bool isExplanationComplete =
+        explanation != null && explanation!.isNotEmpty && !isExplanationLoading;
+    final bool isLastQuestion =
+        questionIndex ==
+        context.read<QuizBloc>().state.quiz!.questions.length - 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (explanation != null && explanation!.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(
-            'Explanation:',
-            style: theme.textTheme.titleMedium,
-          ),
+          Text('Explanation:', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             explanation!,
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.grey.shade700,
+            ),
           ),
           const SizedBox(height: 16),
         ],
@@ -344,7 +364,9 @@ class _ExplanationAndNextButton extends StatelessWidget {
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.primaryColor,
                 disabledForegroundColor: Colors.grey,
-                textStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                textStyle: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               child: Text(isExplanationLoading ? 'Loading...' : 'Explain This'),
             ),
@@ -353,9 +375,16 @@ class _ExplanationAndNextButton extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                textStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               child: Text(isLastQuestion ? 'Finish Quiz' : 'Next Question'),
             ),

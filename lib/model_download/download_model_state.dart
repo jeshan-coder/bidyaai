@@ -1,6 +1,8 @@
 part of 'download_model_bloc.dart';
 
-
+/*
+state related to checking and downloading model from hugging face
+ */
 sealed class DownloadModelState extends Equatable{
   const DownloadModelState();
 

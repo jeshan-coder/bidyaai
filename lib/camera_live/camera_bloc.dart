@@ -15,8 +15,6 @@ import 'package:bidyaai/management/model_settings.dart';
 import 'camera_event.dart';
 import 'camera_state.dart';
 
-
-
 /// BLoC responsible for managing camera operations and AI interactions
 /// for the live camera feature.
 class CameraBloc extends Bloc<CameraEvent, CameraState> {
@@ -24,8 +22,8 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
   CameraController? _cameraController;
 
   CameraBloc({required InferenceChat chat})
-      : _chat = chat,
-        super(CameraInitial()) {
+    : _chat = chat,
+      super(CameraInitial()) {
     on<InitializeCamera>(_onInitializeCamera);
     on<CaptureAndSendMessage>(_onCaptureAndSendMessage);
     on<ClearResponse>(_onClearResponse);
@@ -33,7 +31,9 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
 
   /// Initializes the camera controller and starts the preview.
   Future<void> _onInitializeCamera(
-      InitializeCamera event, Emitter<CameraState> emit) async {
+    InitializeCamera event,
+    Emitter<CameraState> emit,
+  ) async {
     if (state is! CameraInitial && state is! CameraError) {
       // Only initialize if not already ready or in error state
       return;
@@ -71,20 +71,29 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
 
   /// Captures an image, sends it with a message to the AI, and streams the response.
   Future<void> _onCaptureAndSendMessage(
-      CaptureAndSendMessage event, Emitter<CameraState> emit) async {
+    CaptureAndSendMessage event,
+    Emitter<CameraState> emit,
+  ) async {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      emit(CameraError(
+      emit(
+        CameraError(
           error: 'Camera not initialized.',
           cameraController: state.cameraController,
-          currentResponse: state.currentResponse));
+          currentResponse: state.currentResponse,
+        ),
+      );
       return;
     }
 
     // Emit loading state with initial message, currentResponse is null for bottom text
-    emit(CameraLoading(
+    emit(
+      CameraLoading(
         cameraController: _cameraController,
-        currentResponse: null, // Set to null to prevent text from appearing at bottom
-        isResponding: true));
+        currentResponse:
+            null, // Set to null to prevent text from appearing at bottom
+        isResponding: true,
+      ),
+    );
 
     try {
       // Clear chat history before new interaction
@@ -93,62 +102,92 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       final XFile imageFile = await _cameraController!.takePicture();
       final Uint8List imageBytes = await imageFile.readAsBytes();
 
-      final prompt = PromptManager.generateImageUnderstandingPrompt(event.message);
+      final prompt = PromptManager.generateImageUnderstandingPrompt(
+        event.message,
+      );
 
-      await _chat.addQueryChunk(Message.withImage(
-        text: prompt,
-        imageBytes: imageBytes,
-        isUser: true,
-      ));
+      await _chat.addQueryChunk(
+        Message.withImage(text: prompt, imageBytes: imageBytes, isUser: true),
+      );
 
       String fullResponse = '';
       final responseStream = _chat.generateChatResponseAsync();
 
-      await for (final responsePart in responseStream.timeout(const Duration(seconds: 45))) {
+      await for (final responsePart in responseStream.timeout(
+        const Duration(seconds: 45),
+      )) {
         fullResponse += responsePart;
         // When streaming, update currentResponse for the TOP overlay only
-        emit(CameraLoading(
+        emit(
+          CameraLoading(
             cameraController: _cameraController,
             currentResponse: fullResponse, // This is for the top overlay
-            isResponding: true));
-        await Future.delayed(const Duration(milliseconds: 50)); // Yield control for streaming
+            isResponding: true,
+          ),
+        );
+        await Future.delayed(
+          const Duration(milliseconds: 50),
+        ); // Yield control for streaming
       }
 
       // When response is complete, set isResponding to false
-      emit(CameraReady(
+      emit(
+        CameraReady(
           cameraController: _cameraController!,
           currentResponse: fullResponse,
-          isResponding: false));
+          isResponding: false,
+        ),
+      );
       print("CameraBloc: Image analysis complete.");
     } on TimeoutException catch (e) {
       print("CameraBloc: AI response timed out: $e");
-      emit(CameraError(
+      emit(
+        CameraError(
           error: 'AI response timed out. Please try again.',
           cameraController: _cameraController,
-          currentResponse: state.currentResponse, // Keep last response for error display
-          isResponding: false));
-      emit(CameraReady(
+          currentResponse:
+              state.currentResponse, // Keep last response for error display
+          isResponding: false,
+        ),
+      );
+      emit(
+        CameraReady(
           cameraController: _cameraController!,
-          currentResponse: state.currentResponse, // Revert to ready state with last response
-          isResponding: false));
+          currentResponse:
+              state.currentResponse, // Revert to ready state with last response
+          isResponding: false,
+        ),
+      );
     } catch (e) {
       print("CameraBloc: Error sending message with image: $e");
-      emit(CameraError(
+      emit(
+        CameraError(
           error: 'Failed to get AI response: $e',
           cameraController: _cameraController,
-          currentResponse: state.currentResponse, // Keep last response for error display
-          isResponding: false));
-      emit(CameraReady(
+          currentResponse:
+              state.currentResponse, // Keep last response for error display
+          isResponding: false,
+        ),
+      );
+      emit(
+        CameraReady(
           cameraController: _cameraController!,
-          currentResponse: state.currentResponse, // Revert to ready state with last response
-          isResponding: false));
+          currentResponse:
+              state.currentResponse, // Revert to ready state with last response
+          isResponding: false,
+        ),
+      );
     }
   }
 
   /// Clears the current AI response displayed on the screen.
   Future<void> _onClearResponse(
-      ClearResponse event, Emitter<CameraState> emit) async {
-    emit(CameraReady(cameraController: _cameraController!, currentResponse: null));
+    ClearResponse event,
+    Emitter<CameraState> emit,
+  ) async {
+    emit(
+      CameraReady(cameraController: _cameraController!, currentResponse: null),
+    );
   }
 
   @override

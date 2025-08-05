@@ -11,13 +11,6 @@ import 'package:bidyaai/camera_live/camera_state.dart';
 import 'package:flutter_gemma/core/chat.dart'; // For InferenceChat
 import 'package:bidyaai/theme.dart'; // IMPORT THEME
 
-// --- IMPORTANT DEPENDENCY ---
-// For image preprocessing to work, please add the 'image' package to your pubspec.yaml:
-//
-// dependencies:
-//   image: ^4.1.7
-//
-
 /// A screen for live camera feed and AI interaction with image input.
 class CameraScreen extends StatefulWidget {
   final InferenceChat chatInstance;
@@ -29,7 +22,7 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
-  // CHANGE: Re-introduced the text controller for the live input field.
+  // text controller for the live input field.
   final TextEditingController _textController = TextEditingController();
 
   @override
@@ -45,13 +38,14 @@ class _CameraScreenState extends State<CameraScreen> {
     super.dispose();
   }
 
-  // CHANGE: This method now reads from the text controller and preprocesses the image.
+  // This method reads from the text controller and preprocesses the image.
   Future<void> _captureAndSendMessage() async {
     final bloc = context.read<CameraBloc>();
     if (_textController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Please type a message to send with the image.')),
+          content: Text('Please type a message to send with the image.'),
+        ),
       );
       return;
     }
@@ -66,16 +60,22 @@ class _CameraScreenState extends State<CameraScreen> {
           // --- IMAGE PREPROCESSING STEP ---
           // Decode, resize to 512x512, and re-encode the image.
           final originalImage = img.decodeImage(imageBytes)!;
-          final resizedImage =
-          img.copyResize(originalImage, width: 512, height: 512);
-          final Uint8List processedImageBytes =
-          Uint8List.fromList(img.encodeJpg(resizedImage));
+          final resizedImage = img.copyResize(
+            originalImage,
+            width: 512,
+            height: 512,
+          );
+          final Uint8List processedImageBytes = Uint8List.fromList(
+            img.encodeJpg(resizedImage),
+          );
           // --- END OF PREPROCESSING ---
 
-          bloc.add(CaptureAndSendMessage(
-            message: _textController.text.trim(),
-            imageBytes: processedImageBytes, // Send the processed image
-          ));
+          bloc.add(
+            CaptureAndSendMessage(
+              message: _textController.text.trim(),
+              imageBytes: processedImageBytes, // Send the processed image
+            ),
+          );
           _textController.clear();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -83,9 +83,9 @@ class _CameraScreenState extends State<CameraScreen> {
           );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Camera not ready yet.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Camera not ready yet.')));
       }
     }
   }
@@ -114,31 +114,33 @@ class _CameraScreenState extends State<CameraScreen> {
       body: BlocConsumer<CameraBloc, CameraState>(
         listener: (context, state) {
           if (state is CameraError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${state.error}')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
           }
         },
         builder: (context, state) {
           if (state is CameraInitial ||
               state is CameraLoading && state.cameraController == null) {
             return const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-                ));
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppTheme.primaryColor,
+                ),
+              ),
+            );
           }
 
           if (state.cameraController == null ||
               !state.cameraController!.value.isInitialized) {
             return const Center(
-                child: Text('Camera not available or initializing...'));
+              child: Text('Camera not available or initializing...'),
+            );
           }
 
           return Stack(
             children: [
-              Positioned.fill(
-                child: CameraPreview(state.cameraController!),
-              ),
+              Positioned.fill(child: CameraPreview(state.cameraController!)),
               if (state.currentResponse != null &&
                   state.currentResponse!.isNotEmpty)
                 Align(
@@ -173,18 +175,18 @@ class _CameraScreenState extends State<CameraScreen> {
                           children: [
                             const CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppTheme.primaryColor),
+                                AppTheme.primaryColor,
+                              ),
                               strokeWidth: 3,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'Analyzing...',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
+                              style: Theme.of(context).textTheme.bodyLarge
                                   ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -195,30 +197,26 @@ class _CameraScreenState extends State<CameraScreen> {
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: () {
-                              innerContext
-                                  .read<CameraBloc>()
-                                  .add(ClearResponse());
+                              innerContext.read<CameraBloc>().add(
+                                ClearResponse(),
+                              );
                             },
                             icon: const Icon(Icons.refresh),
                             label: const Text('Ask New Question'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24)),
-                              textStyle: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                borderRadius: BorderRadius.circular(24),
                               ),
+                              textStyle: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ),
                         );
                       } else {
-                        // CHANGE: Reverted to the live input field and send button UI.
+                        //  live input field and send button UI.
                         return Row(
                           children: [
                             Expanded(
@@ -234,7 +232,9 @@ class _CameraScreenState extends State<CameraScreen> {
                                     borderSide: BorderSide.none,
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 14),
+                                    horizontal: 20,
+                                    vertical: 14,
+                                  ),
                                 ),
                                 style: const TextStyle(color: Colors.black),
                                 onSubmitted: (_) => _captureAndSendMessage(),

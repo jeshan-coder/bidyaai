@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 
 import 'chat_bloc.dart';
 
+// this is not used so, we could ignore this file
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
