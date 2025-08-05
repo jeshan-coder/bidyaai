@@ -74,7 +74,7 @@ finetuning and data preparation files/
 ├── data_preparation.py                 # Python script to convert raw JSON data files into a CSV format suitable for training and finetuning.
 ├── converting_to_task.ipynb            # Jupyter notebook intended to convert data into a task-specific format. (Note: This currently generates an error due to a lack of direct support for Gemma 3n conversion.)
 └── convert_gemma3n_to_tflite           # Script/file for converting the Gemma 3n model to TFLite format. (Note: This also currently lacks direct support and will generate an error.)
-
+```
 ### Key Components
 
 - **Finetuning and Model Files**: The `.ipynb` and `.py` files in the `finetuning and data preparation files/` directory handle all the stages of data preparation, model finetuning, and model evaluation.
