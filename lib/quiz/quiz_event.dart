@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 import 'package:equatable/equatable.dart';
-import 'package:anticipatorygpt/quiz/quiz_model.dart';
+import 'package:bidyaai/quiz/quiz_model.dart';
 @immutable
 sealed class QuizEvent extends Equatable
 {

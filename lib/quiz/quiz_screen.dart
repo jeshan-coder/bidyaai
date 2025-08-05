@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gemma/core/chat.dart';
 
-import 'package:anticipatorygpt/quiz/quiz_model.dart';
-import 'package:anticipatorygpt/quiz/quiz_bloc.dart';
-import 'package:anticipatorygpt/quiz/quiz_event.dart';
-import 'package:anticipatorygpt/quiz/quiz_state.dart';
-import 'package:anticipatorygpt/theme.dart';
+import 'package:bidyaai/quiz/quiz_model.dart';
+import 'package:bidyaai/quiz/quiz_bloc.dart';
+import 'package:bidyaai/quiz/quiz_event.dart';
+import 'package:bidyaai/quiz/quiz_state.dart';
+import 'package:bidyaai/theme.dart';
 
 /// A dedicated screen for displaying and interacting with a generated quiz.
 class QuizScreen extends StatefulWidget {

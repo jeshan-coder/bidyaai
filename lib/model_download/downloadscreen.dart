@@ -1,8 +1,8 @@
-import 'package:anticipatorygpt/model_download/download_model_bloc.dart';
-import 'package:anticipatorygpt/routers.dart';
+import 'package:bidyaai/model_download/download_model_bloc.dart';
+import 'package:bidyaai/routers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:anticipatorygpt/theme.dart'; // IMPORT ADDED
+import 'package:bidyaai/theme.dart'; // IMPORT ADDED
 
 class DownloadScreen extends StatelessWidget {
   const DownloadScreen({super.key});

@@ -5,11 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:image/image.dart' as img; // IMPORT for image processing
 
-import 'package:anticipatorygpt/camera_live/camera_bloc.dart';
-import 'package:anticipatorygpt/camera_live/camera_event.dart';
-import 'package:anticipatorygpt/camera_live/camera_state.dart';
+import 'package:bidyaai/camera_live/camera_bloc.dart';
+import 'package:bidyaai/camera_live/camera_event.dart';
+import 'package:bidyaai/camera_live/camera_state.dart';
 import 'package:flutter_gemma/core/chat.dart'; // For InferenceChat
-import 'package:anticipatorygpt/theme.dart'; // IMPORT THEME
+import 'package:bidyaai/theme.dart'; // IMPORT THEME
 
 // --- IMPORTANT DEPENDENCY ---
 // For image preprocessing to work, please add the 'image' package to your pubspec.yaml:

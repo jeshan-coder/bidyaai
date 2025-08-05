@@ -4,7 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_gemma/core/chat.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
-import 'package:anticipatorygpt/management/prompt_management.dart';
+import 'package:bidyaai/management/prompt_management.dart';
 
 import 'document_reader_event.dart';
 import 'document_reader_state.dart';

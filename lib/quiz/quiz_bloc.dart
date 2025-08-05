@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert'; // For JSON decoding
 
-import 'package:anticipatorygpt/quiz/quiz_event.dart';
-import 'package:anticipatorygpt/quiz/quiz_state.dart';
+import 'package:bidyaai/quiz/quiz_event.dart';
+import 'package:bidyaai/quiz/quiz_state.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_gemma/core/chat.dart'; // For InferenceChat
@@ -10,9 +10,9 @@ import 'package:flutter_gemma/flutter_gemma.dart'; // For Message
 
 import 'package:meta/meta.dart';
 
-import 'package:anticipatorygpt/quiz/quiz_model.dart';
-import 'package:anticipatorygpt/management/prompt_management.dart';
-import 'package:anticipatorygpt/management/model_settings.dart';
+import 'package:bidyaai/quiz/quiz_model.dart';
+import 'package:bidyaai/management/prompt_management.dart';
+import 'package:bidyaai/management/model_settings.dart';
 
 
 

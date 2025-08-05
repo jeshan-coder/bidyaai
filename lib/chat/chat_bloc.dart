@@ -4,10 +4,10 @@ import 'dart:core';
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'package:anticipatorygpt/management/model_settings.dart';
-import 'package:anticipatorygpt/management/prompt_management.dart';
-import 'package:anticipatorygpt/model_download/model_repository.dart';
-import 'package:anticipatorygpt/quiz/quiz_model.dart';
+import 'package:bidyaai/management/model_settings.dart';
+import 'package:bidyaai/management/prompt_management.dart';
+import 'package:bidyaai/model_download/model_repository.dart';
+import 'package:bidyaai/quiz/quiz_model.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/services.dart';

@@ -1,11 +1,11 @@
 import 'dart:typed_data';
-import 'package:anticipatorygpt/theme.dart';
+import 'package:bidyaai/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:anticipatorygpt/routers.dart';
-import 'package:anticipatorygpt/quiz/quiz_model.dart';
+import 'package:bidyaai/routers.dart';
+import 'package:bidyaai/quiz/quiz_model.dart';
 import 'chat_bloc.dart';
 
 class ChatScreen extends StatefulWidget {

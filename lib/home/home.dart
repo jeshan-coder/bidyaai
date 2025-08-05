@@ -1,5 +1,5 @@
-import 'package:anticipatorygpt/routers.dart';
-import 'package:anticipatorygpt/theme.dart';
+import 'package:bidyaai/routers.dart';
+import 'package:bidyaai/theme.dart';
 import 'package:flutter/material.dart';
 
 // The Home widget is now a StatefulWidget to manage the toggle button state.

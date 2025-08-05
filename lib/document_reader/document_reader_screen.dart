@@ -8,7 +8,7 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:flutter_gemma/core/chat.dart';
 import 'package:image/image.dart' as img;
 
-import 'package:anticipatorygpt/theme.dart';
+import 'package:bidyaai/theme.dart';
 import 'document_reader_bloc.dart';
 import 'document_reader_event.dart';
 import 'document_reader_state.dart';

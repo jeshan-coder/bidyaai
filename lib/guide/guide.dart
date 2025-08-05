@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:anticipatorygpt/theme.dart';
+import 'package:bidyaai/theme.dart';
 
 class GuideScreen extends StatefulWidget {
   const GuideScreen({super.key});

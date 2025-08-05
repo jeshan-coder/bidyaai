@@ -1,4 +1,4 @@
-name: anticipatorygpt
+name: bidyaai
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -46,6 +46,8 @@ dependencies:
   file_picker: ^10.2.1
   flutter_pdfview: ^1.4.1+1
   syncfusion_flutter_pdfviewer: ^30.1.42
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_test:
@@ -69,26 +71,13 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
   assets:
-      - assets/first.png
-      - assets/assist.png
-      - assets/bidya.png
-      - assets/user.png
-#      - assets/gemma-3n-E4B-it-int4.task
-  #   - images/a_dot_ham.jpeg
+    - assets/
+    - assets/first.png
+    - assets/assist.png
+    - assets/bidya.png
+    - assets/user.png
 
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
   fonts:
     - family: Lexend
       fonts:
@@ -110,6 +99,70 @@ flutter:
           weight: 800
         - asset: assets/fonts/Lexend-Black.ttf
           weight: 900
+# --- flutter_launcher_icons configuration ---
+flutter_launcher_icons:
+  android: true # Explicitly target Android
+  ios: false    # Set to false to prevent iOS icon generation
+  # Optionally set other platforms to false if you don't need them
+  # web: false
+  # windows: false
+  # macos: false
+  # linux: false
+
+  # This is the "legacy" icon for older Android devices (pre-Android 8.0)
+  # It's also a fallback if adaptive icons aren't supported or the system
+  # can't render them for some reason.
+  image_path: "assets/icon/logo.png"
+
+  # --- Adaptive Icon Configuration for Android 8.0 (API 26) and higher ---
+  # This uses your two separate images for the adaptive icon layers
+  adaptive_icon_background: "#FFFFFF" # Use a solid color for the background
+  # Alternatively, if you have a background *image* for the adaptive icon:
+  # adaptive_icon_background: "assets/icon/logo_background.png"
+
+  adaptive_icon_foreground: "assets/icon/logo_foreground.png"
+
+  min_sdk_android: 24 # Make sure this matches your project's minSdk.
+
+
+
+  # To add assets to your application, add an assets section, like this:
+
+#      - assets/gemma-3n-E4B-it-int4.task
+  #   - images/a_dot_ham.jpeg
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+#  fonts:
+#    - family: Lexend
+#      fonts:
+#        - asset: assets/fonts/Lexend-Thin.ttf
+#          weight: 100
+#        - asset: assets/fonts/Lexend-ExtraLight.ttf
+#          weight: 200
+#        - asset: assets/fonts/Lexend-Light.ttf
+#          weight: 300
+#        - asset: assets/fonts/Lexend-Regular.ttf
+#          weight: 400 # This is the default "normal" weight
+#        - asset: assets/fonts/Lexend-Medium.ttf
+#          weight: 500
+#        - asset: assets/fonts/Lexend-SemiBold.ttf
+#          weight: 600
+#        - asset: assets/fonts/Lexend-Bold.ttf
+#          weight: 700
+#        - asset: assets/fonts/Lexend-ExtraBold.ttf
+#          weight: 800
+#        - asset: assets/fonts/Lexend-Black.ttf
+#          weight: 900
   # fonts:
   #   - family: Schyler
   #     fonts:

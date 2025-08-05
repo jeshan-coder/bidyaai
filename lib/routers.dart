@@ -1,10 +1,10 @@
-import 'package:anticipatorygpt/camera_live/camera_bloc.dart';
-import 'package:anticipatorygpt/camera_live/camera_screen.dart';
-import 'package:anticipatorygpt/document_reader/document_reader_bloc.dart';
-import 'package:anticipatorygpt/document_reader/document_reader_screen.dart';
-import 'package:anticipatorygpt/model_download/downloadscreen.dart';
-import 'package:anticipatorygpt/quiz/quiz_model.dart';
-import 'package:anticipatorygpt/quiz/quiz_screen.dart';
+import 'package:bidyaai/camera_live/camera_bloc.dart';
+import 'package:bidyaai/camera_live/camera_screen.dart';
+import 'package:bidyaai/document_reader/document_reader_bloc.dart';
+import 'package:bidyaai/document_reader/document_reader_screen.dart';
+import 'package:bidyaai/model_download/downloadscreen.dart';
+import 'package:bidyaai/quiz/quiz_model.dart';
+import 'package:bidyaai/quiz/quiz_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gemma/core/chat.dart';

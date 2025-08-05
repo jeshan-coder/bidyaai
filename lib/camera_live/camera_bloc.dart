@@ -9,8 +9,8 @@ import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:path_provider/path_provider.dart'; // For temporary file path
 import 'dart:io'; // For File operations
 
-import 'package:anticipatorygpt/management/prompt_management.dart';
-import 'package:anticipatorygpt/management/model_settings.dart';
+import 'package:bidyaai/management/prompt_management.dart';
+import 'package:bidyaai/management/model_settings.dart';
 
 import 'camera_event.dart';
 import 'camera_state.dart';
