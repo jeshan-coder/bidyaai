@@ -1,4 +1,4 @@
-# anticipatorygpt
+# Bidyaai
 
 A new Flutter project.
 
